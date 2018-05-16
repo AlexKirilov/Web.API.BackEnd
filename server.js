@@ -1,33 +1,29 @@
 var express = require('express');
 var cors = require('cors');
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var auth = require('./auth');
+var jwt = require('jwt-simple');
+var User = require('./models/User');
+
 var app = express();
 
+mongoose.Promise = Promise;
+
 app.use(cors());
+app.use(bodyParser.json());
 
-var posts = [
-    {message: 'g' },
-    {message: 'gt' },
-];
 
-app.get('/posts', function (req, res) {
-    res.send(posts);
-});
+app.use('/auth', auth.router);
 
-/*
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
-  
-  app.get('/posts', function(req, res, next) {
-    // Handle the get for this route
-    res.send(posts);
-  });
-  
-  app.post('/', function(req, res, next) {
-   // Handle the post for this route
-  });
- */
+app.get('/test', auth.checkAuthenticated, (req, res) => {
+    console.log(req.userId);
+})
+mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', (err) => {
+    if (!err) console.log('connected to mongo');
+})
 
-app.listen(3000);
+app.listen( process.env.PORT || 3000);
+
+//Forin Key command -- da sglobim 2 tablici zaedno
+// author: { type: mongoose.Schema.Types.ObjectId, ref: 'User'}

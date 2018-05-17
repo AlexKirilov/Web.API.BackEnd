@@ -8,6 +8,9 @@ var auth = require('./access/auth');
 var dbtype = require('./access/dbType');
 var mapChart = require('./access/mapChart');
 var customers = require('./access/customers');
+var categories = require('./accessData/category');
+var storeProducts = require('./accessData/product');
+var cuInvoiceDetails = require('./accessData/cuInvoiceDetails');
 
 var variables = require('./var') //TODO: This should be removed at the END
 var func = require('./func'); //TODO: This should be removed at the END
@@ -24,8 +27,10 @@ app.use('/auth', auth);
 app.use('/map', mapChart);
 app.use('/webtype', dbtype);
 app.use('/customers', customers);
-// app.use('/store/test', dbtype);
-// app.use('/store/test', dbtype);
+app.use('/category', categories);
+app.use('/cusinvoicedetails', cuInvoiceDetails);
+
+app.use('/store', storeProducts);
 
 app.get('/store/test', func.checkAuthenticated, (req, res) => {
     console.log(req.userId);

@@ -23,8 +23,8 @@ var func = {
         res.status(200).send({ token })
     },
     //TODO: This need to be tested -> key ot change back to variables.masterKey
-    checkAuthenticated: (req, res, next, key) => {
-        console.log('Key: ', key);
+    checkAuthenticated: (req, res, next) => {
+        console.log('In 2')
         if (!req.header('Authorization'))
             return res.status(401).send( variables.errorMsg.type401.unauthorized )
         var token = req.header('Authorization').split(' ')[1]; //[0] removing the 'token' string
@@ -33,6 +33,7 @@ var func = {
             return res.status(401).send( variables.errorMsg.type401.unauthorized )
 
         req.userId = payload.sub;
+        console.log('req.userId: ', req.userId)
         next();
     }, // .post('/login', checkAuthenticated, async (req, res) => {
 }

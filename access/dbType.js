@@ -34,6 +34,5 @@ webTypeRouter.post('/checkForExistingWebType', async (req, res) => {
         res.status(200).send({ exist: false });
     }
 });
-//TODO CheckForExistingTypeName
 
 module.exports = webTypeRouter;

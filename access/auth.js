@@ -56,7 +56,7 @@ authRouter.post('/checkForUser', async (req, res) => {
     if (userData && userData.email.trim() != '' && func.validateEmail(userData.email)) {
         var user = await User.findOne({ email: userData.email })
         if (user !== null) {
-            return res.status(200).send({ exist: true })
+            return res.status(204).send({ exist: true })
         }
         res.status(200).send({ exist: false });
     }

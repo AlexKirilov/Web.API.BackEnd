@@ -2,9 +2,15 @@ var express = require('express');
 var cors = require('cors');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-var auth = require('./auth');
 var jwt = require('jwt-simple');
-var User = require('./models/User');
+
+var auth = require('./access/auth');
+var dbtype = require('./access/dbType');
+var mapChart = require('./access/mapChart');
+var customers = require('./access/customers');
+
+var variables = require('./var') //TODO: This should be removed at the END
+var func = require('./func'); //TODO: This should be removed at the END
 
 var app = express();
 
@@ -14,9 +20,14 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-app.use('/auth', auth.router);
+app.use('/auth', auth);
+app.use('/map', mapChart);
+app.use('/webtype', dbtype);
+app.use('/customers', customers);
+// app.use('/store/test', dbtype);
+// app.use('/store/test', dbtype);
 
-app.get('/test', auth.checkAuthenticated, (req, res) => {
+app.get('/store/test', func.checkAuthenticated, (req, res) => {
     console.log(req.userId);
 })
 mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', (err) => {

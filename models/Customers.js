@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 
-var userSchema = new mongoose.Schema({
-    username: String,
+var customerSchema = new mongoose.Schema({
+    siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     email: String,
     password: String,
     firstname: String,
@@ -10,11 +10,10 @@ var userSchema = new mongoose.Schema({
     company: String,
     levelAuth: String, // Level only to auth 
     type: String, // Level only for users
-    token: String,
-    webTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'WebType'},
+    GDPR: Boolean,
 });
 
-userSchema.pre('save', function (next) {
+customerSchema.pre('save', function (next) {
     var user = this;
 
     if(!user.isModified('password')) return next();
@@ -25,4 +24,4 @@ userSchema.pre('save', function (next) {
     })
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Customers', customerSchema);

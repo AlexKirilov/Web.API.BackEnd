@@ -15,7 +15,7 @@ productRouter.post('/products', func.checkAuthenticated, async (req, res) => {
     var productData = req.body;
     if (productData) {
 
-        by = { user: req.userId };
+        by = { customer: req.userId };
         if (!!productData.name) by.name = productData.name;
         if (!!productData.price) by.price = productData.price;
         if (!!productData.quantity) by.quantity = productData.quantity;
@@ -44,14 +44,14 @@ productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => {
         return res.status(400).send(variables.errorMsg.type401.invalidData);
     }
 
-    productData.user = req.userId;
+    productData.customer = req.userId;
 
     let newProduct = new Products(productData);
     newProduct.save((err, newProd) => {
         if (err) {
             return res.status(500).send(variables.errorMsg.type500.serverError);
         }
-        res.status(200).send(variables.successMsg.webtype); //TODO: change message
+        res.status(200).send(variables.successMsg.created); //TODO: change message
     });
 });
 
@@ -66,5 +66,23 @@ productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => {
 //         res.status(200).send({ exist: false });
 //     }
 // });
+
+/////////////////////////////////////////////////
+////////////////    DELETE    ///////////////////
+/////////////////////////////////////////////////
+
+// TODO ONLY SYAdmin can Edit and Customer it SELF
+productRouter.post('/removeproducts', func.checkAuthenticated, async (req, res) => {
+    try {
+        if (req.userId == void 0)
+            return res.status(400).send(variables.errorMsg.type401.invalidData);
+
+        Products.remove({ customer: req.userId }).exec(
+            res.status(201).send(variables.successMsg.remove)
+        );
+    } catch (err) {
+        return res.json(variables.errorMsg.type500.notfound);
+    }
+});
 
 module.exports = productRouter;

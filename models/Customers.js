@@ -11,6 +11,7 @@ var customerSchema = new mongoose.Schema({
     levelAuth: String, // Level only to auth 
     type: String, // Level only for users
     GDPR: Boolean,
+    token: String
 });
 
 customerSchema.pre('save', function (next) {

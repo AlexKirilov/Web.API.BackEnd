@@ -28,7 +28,7 @@ categoryRouter.post('/createcategory', (req, res) => {
         if (err) {
             return res.status(500).send(variables.errorMsg.type500.serverError);
         }
-        res.status(200).send(variables.successMsg.webtype); //TODO: change message
+        res.status(200).send(variables.successMsg.created); //TODO: change message
     });
 });
 

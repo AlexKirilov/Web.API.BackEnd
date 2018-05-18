@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 
 var productsSchema = new mongoose.Schema({
     // siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories'},
     subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategories'},
     name: String,

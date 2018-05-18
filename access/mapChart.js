@@ -20,7 +20,7 @@ mapChartRouter.get('/chart', (req, res) => {
             let resInvoices = Object.keys(cusInvoiceDetails.schema.paths);
             let collection = [resCat, resSubCat, resWebContacts, resProducts, resInvoices];
             // console.log(collection);
-             console.log(products.schema.pathType)
+            //  console.log(products.schema.pathType)
             break;
     }
 

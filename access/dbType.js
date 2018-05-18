@@ -15,7 +15,7 @@ webTypeRouter.post('/createwebtype', (req, res) => {
         if (err) {
             return res.status(500).send(variables.errorMsg.type500.serverError);
         }
-        res.status(200).send(variables.successMsg.webtype);
+        res.status(200).send(variables.successMsg.created);
     });
 });
 

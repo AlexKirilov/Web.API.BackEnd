@@ -16,12 +16,11 @@ productRouter.post('/products', func.checkAuthenticated, async (req, res) => {
     if (productData) {
 
         by = { customer: req.userId };
-        if (!!productData.name) by.name = productData.name;
+        if (!!productData.name) by.name = { "$regex": productData.name, "$options": 'i' };
         if (!!productData.price) by.price = productData.price;
         if (!!productData.quantity) by.quantity = productData.quantity;
         if (!!productData.category) by.category = productData.category;
         if (!!productData.subcategory) by.subcategory = productData.subcategory;
-
         let userProductsData = await Products.find(by);
         if (userProductsData == null) {
             return res.status(200).send({ message: 'There are no products found!' })
@@ -33,6 +32,18 @@ productRouter.post('/products', func.checkAuthenticated, async (req, res) => {
     }
 });
 
+//Search by substring
+// TODO: Do we need this ????
+// productRouter.post('/checkForExistingWebType', async (req, res) => {
+//     var typeData = req.body;
+//     if (typeData && typeData.name.trim() != '') {
+//         var type = await Products.findOne({ name: typeData.name })
+//         if (type !== null) {
+//             return res.status(204).send({ exist: true })
+//         }
+//         res.status(200).send({ exist: false });
+//     }
+// });
 
 /////////////////////////////////////////////
 ////////////// POST /////////////////////////
@@ -55,17 +66,8 @@ productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => {
     });
 });
 
-// TODO: Do we need this ????
-// productRouter.post('/checkForExistingWebType', async (req, res) => {
-//     var typeData = req.body;
-//     if (typeData && typeData.name.trim() != '') {
-//         var type = await Products.findOne({ name: typeData.name })
-//         if (type !== null) {
-//             return res.status(204).send({ exist: true })
-//         }
-//         res.status(200).send({ exist: false });
-//     }
-// });
+
+
 
 /////////////////////////////////////////////////
 ////////////////    DELETE    ///////////////////

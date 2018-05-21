@@ -8,7 +8,7 @@ var func = require('../func');
 ////////////// GET //////////////////////////
 /////////////////////////////////////////////
 
-productRouter.post('/cusInvoiceDetails', func.checkAuthenticated, async (req, res) => {
+productRouter.post('/cusInvoiceDetails', func.checkCustomerAuthenticated, async (req, res) => {
     //By Owner --- ????
     var data = req.body;
     if (data) {
@@ -28,7 +28,7 @@ productRouter.post('/cusInvoiceDetails', func.checkAuthenticated, async (req, re
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////
 
-productRouter.post('/addCusInvoiceDetails', func.checkAuthenticated, async (req, res) => {
+productRouter.post('/addCusInvoiceDetails', func.checkCustomerAuthenticated, async (req, res) => {
     let data = req.body;
     if (req.userId == void 0 || data.GDPR == 'false') {
         return res.status(400).send(variables.errorMsg.type401.invalidData);
@@ -58,7 +58,7 @@ productRouter.post('/addCusInvoiceDetails', func.checkAuthenticated, async (req,
 /////////////////   REMOVE   ////////////////////
 /////////////////////////////////////////////////
 
-productRouter.post('/removeCusInvoiceDetails', func.checkAuthenticated, async (req, res) => {
+productRouter.post('/removeCusInvoiceDetails', func.checkCustomerAuthenticated, async (req, res) => {
     try {
         if (req.userId == void 0)
             return res.status(400).send(variables.errorMsg.type401.invalidData);

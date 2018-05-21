@@ -1,18 +1,17 @@
-var Products = require('../models/store/Products');
-var express = require('express');
-var productRouter = express.Router();
-var func = require('../func');
-var variables = require('../var');
+let Products = require('../models/store/Products');
+let Customer = require('../models/Customers');
+let express = require('express');
+let productRouter = express.Router();
+let func = require('../func');
+let variables = require('../var');
 
 /////////////////////////////////////////////
 ////////////// GET //////////////////////////
 /////////////////////////////////////////////
-productRouter.post('/products', func.checkAuthenticated, async (req, res) => {
-    //By Owner --- ????
-    //TODO: Search by substring
+productRouter.post('/products', func.checkCustomerAuthenticated, async (req, res) => {
     let by = {};
 
-    var productData = req.body;
+    let productData = req.body;
     if (productData) {
 
         by = { customer: req.userId };
@@ -21,41 +20,29 @@ productRouter.post('/products', func.checkAuthenticated, async (req, res) => {
         if (!!productData.quantity) by.quantity = productData.quantity;
         if (!!productData.category) by.category = productData.category;
         if (!!productData.subcategory) by.subcategory = productData.subcategory;
-        let userProductsData = await Products.find(by);
-        if (userProductsData == null) {
-            return res.status(200).send({ message: 'There are no products found!' })
-        }
-        res.send(userProductsData);
+        let userProductsData = await Products.find(by, (err, response) => {
+            if (err) return res.json(variables.errorMsg.type500.notfound);
+            // if(response.length == 0 ) return res.json({message: '!There are no products found!'});
+            res.send(response);
+        });
 
     } else {
         return res.status(500).send('Products -> ' + variables.errorMsg.type500.serverError);
     }
 });
 
-//Search by substring
-// TODO: Do we need this ????
-// productRouter.post('/checkForExistingWebType', async (req, res) => {
-//     var typeData = req.body;
-//     if (typeData && typeData.name.trim() != '') {
-//         var type = await Products.findOne({ name: typeData.name })
-//         if (type !== null) {
-//             return res.status(204).send({ exist: true })
-//         }
-//         res.status(200).send({ exist: false });
-//     }
-// });
-
 /////////////////////////////////////////////
 ////////////// POST /////////////////////////
 /////////////////////////////////////////////
 
-productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => {
+productRouter.post('/createproduct', func.checkCustomerAuthenticated, (req, res) => { //TODO Only if it`s Admin or Manager
     let productData = req.body;
     if (req.userId == void 0 && (productData.name == void 0 || productData.name.trim() == '')) {
         return res.status(400).send(variables.errorMsg.type401.invalidData);
     }
 
     productData.customer = req.userId;
+    console.log(productData)
 
     let newProduct = new Products(productData);
     newProduct.save((err, newProd) => {
@@ -73,12 +60,45 @@ productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => {
 ////////////////    DELETE    ///////////////////
 /////////////////////////////////////////////////
 
-// TODO ONLY SYAdmin can Edit and Customer it SELF
-productRouter.post('/removeproducts', func.checkAuthenticated, async (req, res) => {
+//TODO Only if it`s Admin or Manager
+productRouter.post('/removeproduct', func.checkCustomerAuthenticated, async (req, res) => {
+    let productData = req.body;
     try {
         if (req.userId == void 0)
             return res.status(400).send(variables.errorMsg.type401.invalidData);
 
+        // This will delete all products connected with that customer
+        Products.findByIdAndRemove(productData._id, (err, item) => {
+            if (err) return res.status(500).send(variables.errorMsg.type500.remove);
+            res.status(201).send(variables.successMsg.remove)
+        });
+    } catch (err) {
+        return res.json(variables.errorMsg.type500.notfound);
+    }
+});
+//TODO BY CAT OR SuBCat
+productRouter.post('/removeAllProductByCategory', func.checkCustomerAuthenticated, async (req, res) => {
+    let productData = req.body;
+    try {
+        if (req.userId == void 0)
+            return res.status(400).send(variables.errorMsg.type401.invalidData);
+
+        let by = { category: productData.catId }
+        // This will delete all products connected with that category
+        Products.remove(by).exec(
+            res.status(201).send(variables.successMsg.remove)
+        );
+    } catch (err) {
+        return res.json(variables.errorMsg.type500.notfound);
+    }
+});
+
+productRouter.post('/removeAllproductsByCustomer', func.checkCustomerAuthenticated, async (req, res) => {
+    try {
+        if (req.userId == void 0)
+            return res.status(400).send(variables.errorMsg.type401.invalidData);
+
+        // This will delete all products connected with that customer
         Products.remove({ customer: req.userId }).exec(
             res.status(201).send(variables.successMsg.remove)
         );

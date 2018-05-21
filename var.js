@@ -1,5 +1,6 @@
 var variables = {
     masterKey: '123',
+    customerkey: '456',
     errorMsg: {
         type401: {
             invalidData: { message: 'Invalid data' },

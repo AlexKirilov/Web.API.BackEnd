@@ -19,24 +19,34 @@ let func = {
         return token;
     },
     createToken: (res, user, key) => {
-        if(!key) key = variables.masterKey;
+        if (!key) key = variables.masterKey;
         let payload = { sub: user.id, type: user.type }
         let token = jwt.encode(payload, key);
         res.status(200).send({ token })
     },
-    //TODO: This need to be tested -> key ot change back to variables.masterKey
-    checkAuthenticated: (req, res, next) => {
+    // checkAuthenticated: (req, res, next) => {
+    //     if (!req.header('Authorization'))
+    //         return res.status(401).send(variables.errorMsg.type401.unauthorized)
+    //     let token = req.header('Authorization').split(' ')[1]; //[0] removing the 'token' string
+    //     let payload = jwt.decode(token, variables.masterKey); 
+    //     if (!payload)
+    //         return res.status(401).send(variables.errorMsg.type401.unauthorized)
+
+    //     req.userId = payload.sub;
+    //     next();
+    // }, // .post('/login', checkAuthenticated, async (req, res) => {
+    checkCustomerAuthenticated: (req, res, next) => {
         if (!req.header('Authorization'))
             return res.status(401).send(variables.errorMsg.type401.unauthorized)
         let token = req.header('Authorization').split(' ')[1]; //[0] removing the 'token' string
-        let payload = jwt.decode(token, variables.masterKey); // TODO: Change to key
+        let payload = jwt.decode(token, variables.masterKey);
         if (!payload)
             return res.status(401).send(variables.errorMsg.type401.unauthorized)
 
         req.userId = payload.sub;
         next();
-    }, // .post('/login', checkAuthenticated, async (req, res) => {
-    request: (req,method,path,callback) => {
+    }, // .post('/login', checkCustomerAuthenticated, async (req, res) => {
+    request: (req, method, path, callback) => {
         let port = 3000
         if (req.protocol == 'http') port = 3000; // should goes to 80
         if (req.protocol == 'https') port = 443;
@@ -58,6 +68,22 @@ let func = {
                 console.log('*****************************************************');
             });
         }).end(callback());
+    },
+    currentDate() {
+        let today = new Date();
+        let dd = today.getDate();
+        let mm = today.getMonth() + 1; //January is 0!
+        let yyyy = today.getFullYear();
+
+        if (dd < 10) {
+            dd = '0' + dd
+        }
+
+        if (mm < 10) {
+            mm = '0' + mm
+        }
+
+        return mm + '/' + dd + '/' + yyyy;
     }
 }
 

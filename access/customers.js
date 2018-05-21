@@ -6,11 +6,11 @@ let customerRouter = express.Router();
 let func = require('../func');
 let variables = require('../var');
 
-var Products = require('../models/store/Products');
-var InvoiceDetails = require('../models/store/CustomerInvoiceDetails');
+let Products = require('../models/store/Products');
+let InvoiceDetails = require('../models/store/CustomerInvoiceDetails');
 
 /* Level of Auth
-// SA -> System Admin
+// SA -> SysAdmin
 // AD -> Admin
 // MN -> Manager
 // CU -> Customer
@@ -33,6 +33,12 @@ customerRouter.post('/login', async (req, res) => {
             if (!isMatch) {
                 return res.status(401).send(variables.errorMsg.type401.invalidCreds)
             }
+            //Save the login time
+            let currentDate = func.currentDate();
+            customer.lastLogin = currentDate
+            Customer.findByIdAndUpdate(customer._id, customer, (err, result) => { //variables.successMsg.update
+                if(err) return res.json(variables.errorMsg.type500.update);
+            });
             func.createToken(res, customer); //TODO: Send and the FName
         });
     } else
@@ -57,31 +63,24 @@ customerRouter.post('/checkForUser', async (req, res) => {
 /////////////////////////////////////////////////
 customerRouter.post('/register', async (req, res) => {
     let data = req.body;
-
+    console.log('1')
     if (data && data.password && data.email && data.firstname && data.lastname
         && data.password != void 0 && data.email != void 0 && func.validateEmail(data.email)
     ) {
         // Check for existing email
         let isCustExist = await Customer.find({ email: data.email });
+        console.log('2: ', isCustExist)
         if (isCustExist.length == 0) {
             //Set Optional fields to default values or null
             if (!data.GDPR) data.GDPR = false;
             if (!!!data.company) data.company = '';
-            if (!!!data.type || data.type == '') data.type = 'user';
-
-            switch (data.type) {
-                case 'admin':
-                    data.levelAuth = 'AD'; break;
-                case 'manager':
-                    data.levelAuth = 'MN'; break;
-                case '':
-                    data.levelAuth = 'CU'; break;
-                case 'user':
-                    data.levelAuth = 'CU'; break;
-                case 'guest':
-                    data.levelAuth = 'GU'; break;
+            if (!!!data.type || data.type == '') {
+                data.type = 'user';
+                data.levelAuth = 'CU';
             }
-
+            data.created = func.currentDate();
+            data.lastLogin = func.currentDate();
+            
             let customer = new Customer(data);
             customer.save((err, result) => {
                 if (err) {
@@ -95,31 +94,10 @@ customerRouter.post('/register', async (req, res) => {
     } else
         return res.status(402).send(variables.errorMsg.type401.invalidData);
 });
-// TODO ONLY SYAdmin can Edit and Customer it SELF
-//TODO: Edit / Change password / email
-customerRouter.post('/editcustomer', func.checkAuthenticated, (req, res) => {
+
+customerRouter.post('/editcustomer', func.checkCustomerAuthenticated, (req, res) => {
     let data = req.body;
-
     if (data && !!data.password && !!data.email && !!data.firstname && !!data.lastname && func.validateEmail(data.email)) {
-        //Set Optional fields to default values or null
-        if (!!!data.company || data.company == '') data.company = '';
-        if (!!!data.type || data.type == '') data.type = 'user';
-
-        data.siteOwner = '5afdc5fcd5192138388189c7' // TODO Delete me
-
-        switch (data.type) {
-            case 'admin':
-                data.levelAuth = 'AD'; break;
-            case 'manager':
-                data.levelAuth = 'MN'; break;
-            case 'user':
-                data.levelAuth = 'CU'; break;
-            case 'guest':
-                data.levelAuth = 'GU'; break;
-        }
-        //TODO : change the way // Search by email and search by id
-        let id = '5afdc5fcd5192138388189c7'
-
         Customer.findByIdAndUpdate(id, data, (err, result) => {
             if (!err) res.status(201).send(variables.successMsg.update);
             else res.status(500).send(variables.errorMsg.type500.notfound);
@@ -132,47 +110,17 @@ customerRouter.post('/editcustomer', func.checkAuthenticated, (req, res) => {
 ////////////////    DELETE    ///////////////////
 /////////////////////////////////////////////////
 
-// TODO ONLY SYAdmin can Edit and Customer it SELF
-// Removing the Customer Delete all DB connected with the customer
-
-// Invoice Details
-// Invoices
-// Products
-
-customerRouter.post('/removecustomer', func.checkAuthenticated, async (req, res) => {
+customerRouter.post('/deletecustomer', func.checkCustomerAuthenticated, (req, res) => {
     let data = req.body;
-    let method, path;
-    try {
-        let isCustExist = await Customer.find({ _id: req.userId });
-        if (isCustExist.length == 1) {
-
-
-            // Delete Customer Invoice Details
-            let exist = await InvoiceDetails.find({ customer: req.userId });
-            if (exist.length > 0) {
-                InvoiceDetails.findByIdAndRemove(exist[0]._id, null, (err, result) => {
-                    if (err) res.json(variables.errorMsg.type500.serverError);
-                    console.log(result);
-                });
-            }
-
-            // Delete Customer Products
-            Products.remove({ customer: req.userId }).exec();
-
-            // Delete Invoices
-            // TODO: 
-
-            // Delete Cusomer Account
-            Customer.findByIdAndRemove(req.userId, data, (err, result) => {
-                if (err) res.status(500).send(variables.errorMsg.type500.notfound);
-                res.json({ message: `Customer ${variables.successMsg.remove.message}` })
+    let isCustomer = Customer.findById(req.userId, (err, result) => {
+        if (err) return res.json(variables.errorMsg.notfound);
+        else if (result.type == 'CU') {
+            Customer.findByIdAndRemove(req.userId, (err, removed) => {
+                if (!err) res.status(200).send(variables.successMsg.remove);
+                else return res.status(500).send(variables.errorMsg.type500.notfound);
             });
-        } else {
-            res.json(variables.errorMsg.type500.notfound)
         }
-    } catch (err) {
-        return res.status(500).send(variables.errorMsg.type500.remove);
-    }
+    })
 });
 
 module.exports = customerRouter;

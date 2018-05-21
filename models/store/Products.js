@@ -1,6 +1,6 @@
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
-var productsSchema = new mongoose.Schema({
+let productsSchema = new mongoose.Schema({
     // siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories'},

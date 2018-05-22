@@ -1,4 +1,4 @@
-let Categories = require('../models/Categories');
+let Categories = require('../models/Category');
 let express = require('express');
 let categoryRouter = express.Router();
 let func = require('../func');
@@ -31,7 +31,7 @@ categoryRouter.post('/createcategory', (req, res) => {
         res.status(200).send(variables.successMsg.created); //TODO: change message
     });
 });
-
+//TODO: DELETE OR Convert
 categoryRouter.post('/checkForExistingWebType', async (req, res) => {
     let data = req.body;
     if (data && data.name.trim() != '') {

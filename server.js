@@ -6,12 +6,11 @@ let jwt = require('jwt-simple');
 
 let login = require('./login');
 let auth = require('./access/auth');
-let dbtype = require('./access/dbType');
-let mapChart = require('./access/mapChart');
+let siteType = require('./access/siteType');
 let customers = require('./access/customers');
-let categories = require('./accessData/category');
+let category = require('./accessData/category');
 let storeProducts = require('./accessData/product');
-let cuInvoiceDetails = require('./accessData/cuInvoiceDetails');
+let InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
 
 let app = express();
 
@@ -22,11 +21,10 @@ app.use(bodyParser.json());
 
 app.use('/auth', auth);
 // app.use('/user', login);
-app.use('/map', mapChart);
-app.use('/webtype', dbtype);
+app.use('/sitetype', siteType);
 app.use('/customers', customers);
-app.use('/category', categories);
-app.use('/cusinvoicedetails', cuInvoiceDetails);
+app.use('/category', category);
+app.use('/invoicecustomerdata', InvoiceCustomerDataFunc);
 
 app.use('/store', storeProducts);
 

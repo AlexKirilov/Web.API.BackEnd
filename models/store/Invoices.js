@@ -2,8 +2,9 @@ var mongoose = require('mongoose');
 //Fakturi
 
 var invoicesSchema = new mongoose.Schema({
-    siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
+    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
+    customerID: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
+    customerInvoiceID: { type: mongoose.Schema.Types.ObjectId, ref: 'CustomerInvoiceData'},
     address: String,
     eik: String, //ЕИК
     bulstat: String, //БУЛСТАТ

@@ -1,8 +1,9 @@
+//TODO: DELETE ME IF I AM NOT NEEDED
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 
-var userSchema = new mongoose.Schema({
-    username: String,
+var AuthSchema = new mongoose.Schema({
+    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
     email: String,
     password: String,
     firstname: String,
@@ -10,11 +11,12 @@ var userSchema = new mongoose.Schema({
     company: String,
     levelAuth: String, // Level only to auth 
     type: String, // Level only for users
-    token: String,
-    webTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'WebType'},
+    GDPR: Boolean,
+    created: Date,
+    lastLogin: Date,
 });
 
-userSchema.pre('save', function (next) {
+AuthSchema.pre('save', function (next) {
     var user = this;
 
     if(!user.isModified('password')) return next();
@@ -25,4 +27,4 @@ userSchema.pre('save', function (next) {
     })
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Auth', AuthSchema);

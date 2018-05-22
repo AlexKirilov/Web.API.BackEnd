@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
-var webContactsSchema = new mongoose.Schema({
-    siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+var SiteContactsSchema = new mongoose.Schema({
+    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
     phones: Array,
     connections: {
         facebook: String,
@@ -16,4 +16,4 @@ var webContactsSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('WebContacts', webContactsSchema);
+module.exports = mongoose.model('SiteContacts', SiteContactsSchema);

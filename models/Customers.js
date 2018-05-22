@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 
 var customerSchema = new mongoose.Schema({
-    siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
     email: String,
     password: String,
     firstname: String,
@@ -11,7 +11,6 @@ var customerSchema = new mongoose.Schema({
     levelAuth: String, // Level only to auth 
     type: String, // Level only for users
     GDPR: Boolean,
-    token: String,
     created: Date,
     lastLogin: Date,
 });

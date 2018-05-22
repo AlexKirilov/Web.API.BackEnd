@@ -27,7 +27,7 @@ loginRouter.post('/login', async (req, res) => {
             if (!isMatch) {
                 return res.status(401).send(variables.errorMsg.type401.invalidCreds)
             }
-            func.createToken(res, user, variables.masterKey);
+            func.createToken(res, user);
         });
     } else
         return res.status(401).send(variables.errorMsg.type401.invalidData);
@@ -60,21 +60,21 @@ loginRouter.post('/checkForUser', async (req, res) => {
 //                 if (!isMatch) {
 //                     return res.status(401).send(variables.errorMsg.type401.invalidCreds);
 //                 }
-//                 func.createToken(res, user, variables.masterKey);
+//                 func.createToken(res, user);
 //             });
 //         } else if (user.type === 'AD' && user.levelAuth === 'Admin') {
 //             bcrypt.compare(loginData.password, user.password, (err, isMatch) => {
 //                 if (!isMatch) {
 //                     return res.status(401).send(variables.errorMsg.type401.invalidCreds);
 //                 }
-//                 func.createToken(res, user, variables.masterKey);
+//                 func.createToken(res, user);
 //             });
 //         } else if (user.type === 'MN' && user.levelAuth === 'Manager' && user.type === 'CU' && user.levelAuth === 'Cutomer') {
 //             bcrypt.compare(loginData.password, user.password, (err, isMatch) => {
 //                 if (!isMatch) {
 //                     return res.status(401).send(variables.errorMsg.type401.invalidCreds);
 //                 }
-//                 func.createToken(res, user, variables.masterKey);
+//                 func.createToken(res, user);
 //             });
 //         } else {
 //             return res.status(204).send(variables.errorMsg.type401.invalidCreds);// TODO change message

@@ -12,7 +12,7 @@
 
 // Invoice to customerInvoicesDetails
 // Create new Invoices - where will be hold all personal Invoices
-
+// Check all security settings at the end
 
 // Cus Invoiced - Finnished -- only if we need By Owner check
 

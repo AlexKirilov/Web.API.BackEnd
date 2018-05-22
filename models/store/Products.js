@@ -1,10 +1,9 @@
 let mongoose = require('mongoose');
 
 let productsSchema = new mongoose.Schema({
-    // siteOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories'},
-    subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'SubCategories'},
+    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
+    // customerID: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'}, // For Future USES
+    categoryID: { type: mongoose.Schema.Types.ObjectId, ref: 'Category'},
     name: String,
     sort: Array,
     price: Number,

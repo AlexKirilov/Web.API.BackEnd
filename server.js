@@ -4,10 +4,11 @@ let bodyParser = require('body-parser');
 let mongoose = require('mongoose');
 let jwt = require('jwt-simple');
 
-let login = require('./login');
 let auth = require('./access/auth');
 let siteType = require('./access/siteType');
+let siteData = require('./access/siteData');
 let customers = require('./access/customers');
+let Invoices = require('./accessData/Invoice');
 let category = require('./accessData/category');
 let storeProducts = require('./accessData/product');
 let InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
@@ -20,11 +21,12 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/auth', auth);
-// app.use('/user', login);
 app.use('/sitetype', siteType);
-app.use('/customers', customers);
 app.use('/category', category);
-app.use('/invoicecustomerdata', InvoiceCustomerDataFunc);
+app.use('/invoices', Invoices);
+app.use('/customers', customers);
+app.use('/sitedata', siteData);
+app.use('/invoicecustomersdata', InvoiceCustomerDataFunc);
 
 app.use('/store', storeProducts);
 

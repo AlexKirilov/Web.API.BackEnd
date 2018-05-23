@@ -1,45 +1,71 @@
 let Categories = require('../models/Category');
+let SiteType = require('../models/SiteType');
 let express = require('express');
 let categoryRouter = express.Router();
 let func = require('../func');
 let variables = require('../var');
+//READY
 
 /////////////////////////////////////////////
 ////////////// GET //////////////////////////
 /////////////////////////////////////////////
+// All Categories without SubCategories
 categoryRouter.get('/categories', async (req, res) => {
+    let data = await Categories.find({ "parentId": null });
+    res.send(data);
+});
+
+// All Sub Categories by parent category ID
+// Required data {"type":"5b0428384953411bd455bb90"}
+categoryRouter.post('/subcategories', async (req, res) => {
+    let data = await Categories.find({ "parentId": req.type });
+    res.send(data);
+});
+
+// All sub categories
+categoryRouter.post('/allsubcategories', async (req, res) => {
     let data = await Categories.find({});
-    res.send(data)
+    res.send(data);
 });
 
 
 /////////////////////////////////////////////
 ////////////// POST /////////////////////////
 /////////////////////////////////////////////
-//TODO: Type of category
+// Required data { "name": "bmw", "type":"5b0428384953411bd455bb90", "parentId":"5b05149b8d9e8024cc528527"}
 categoryRouter.post('/createcategory', (req, res) => {
     let data = req.body;
-    if (req.userId == void 0 && (data.name == void 0 || data.name.trim() == '')) {
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+    data.name = data.name.toLowerCase();
+    // Add default category if missing
+    if (!!!data.type) data.type = SiteType.findOne({ name: 'store' })._id; // Temporary check till version 2 of the app
+    if (!!!data.name || data.name.trim() == '' || !!!data.type) {
+        return res.status(400).json({ message: 'There are missing data. Please fill all data and try again!' });
     }
 
-    let newCategory = new Categories(data);
-    newCategory.save((err, result) => {
-        if (err) {
-            return res.status(500).send(variables.errorMsg.type500.serverError);
+    // Check if category name already exists
+    let ifCatExist = Categories.find({ name: data.name }, (err, results) => {
+        if (err) return res.status(500).send(variables.errorMsg.type500.serverError);
+        if (results.length == 0) {
+            let newCategory = new Categories(data);
+            newCategory.save((err, result) => {
+                if (err)
+                    return res.status(500).send(variables.errorMsg.type500.serverError);
+                res.status(200).send(variables.successMsg.created); //TODO: change message
+            });
+        } else {
+            res.json({ message: 'This category name is already taken!' }); //TODO: change message
         }
-        res.status(200).send(variables.successMsg.created); //TODO: change message
     });
 });
-//TODO: DELETE OR Convert
-categoryRouter.post('/checkForExistingWebType', async (req, res) => {
+
+// Requirment data { "name": "clothes"}
+categoryRouter.post('/checkForExistingCategory', async (req, res) => {
     let data = req.body;
     if (data && data.name.trim() != '') {
         let type = await Categories.findOne({ name: data.name })
-        if (type !== null) {
-            return res.status(204).send({ exist: true })
-        }
-        res.status(200).send({ exist: false });
+        if (type !== null)
+            return res.json({ exist: true })
+        res.json({ exist: false });
     }
 });
 

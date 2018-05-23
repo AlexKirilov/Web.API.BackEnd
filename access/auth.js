@@ -124,7 +124,7 @@ authRouter.post('/checkForUser', (req, res) => {
 authRouter.post('/changeauthlevel', func.checkAuthenticated, async (req, res) => {
 
     let userData = req.body;
-    if (!!req.userId && !!userData && !!userData.levelAuth) {
+    if (!!req.userId && !!userData && !!req.levelAuth) {
         Auth.findById(req.userId, (err, rest) => {
             if (err || (rest.levelAuth !== 'AD' && rest.levelAuth !== 'SA')) {
                 return res.status(401).send(variables.errorMsg.type401.invalidCreds);
@@ -157,48 +157,60 @@ authRouter.post('/changeauthlevel', func.checkAuthenticated, async (req, res) =>
 // Removing the Customer Delete all DB connected with the customer
 authRouter.post('/deleteauthuserandsitedata', func.checkAuthenticated, async (req, res) => {
     let data = req.body;
-    if (!!data && !!data.userId && !!data.siteID) {
-
+    if (!!data && !!req.userId && !!req.siteID) {
+        console.log('tuk 1')
         Auth.findById(req.userId, (err, rest) => {
-            if (err || rest.type !== 'AD' || rest.type !== 'SA') {
-                return res.status(401).send(variables.errorMsg.type401.invalidCreds);
-            } else {
-                try {
-                    let msg = {success: '', err: ''}
-                    // Delete all Products
-                    Products.remove({ siteID: data.siteID });
+            if (rest != null) {
+                if (!!err || (rest.levelAuth !== 'AD' && rest.levelAuth !== 'SA') || req.userId != rest._id) {
+                    return res.status(401).send(variables.errorMsg.type401.invalidCreds);
+                } else {
+                    try {
+                        console.log('tuk 3', req.siteID)
+                        let msg = { success: '', err: '' }
+                        // Delete all Products - not
+                        Products.find({ siteID: req.siteID }, (err, re) => { console.log('Products ', re) });
+                        Products.remove({ siteID: req.siteID }, err => console.log('success', err));
 
-                    // Delete all Customers
-                    Customer.remove({ siteID: data.siteID });
+                        // Delete all Customers - not
+                        Customer.find({ siteID: req.siteID }, (err, re) => { console.log('Customer ', re) });
+                        Customer.remove({ siteID: req.siteID }, err => console.log('success', err));
 
-                    // Delete all Invoices
-                    Invoices.remove({ siteID: data.siteID });
+                        // Delete all Invoices - not
+                        Invoices.find({ siteID: req.siteID }, (err, re) => { console.log('Invoices ', re) });
+                        Invoices.remove({ siteID: req.siteID }, err => console.log('success', err));
 
-                    // Delete all Invoice Data
-                    InvoiceCustomerData.remove({ siteID: data.siteID });
+                        // Delete all Invoice Data - not
+                        InvoiceCustomerData.find({ siteID: req.siteID }, (err, re) => { console.log('InvoiceCustomerData ', re) });
+                        InvoiceCustomerData.remove({ siteID: req.siteID }, err => console.log('success', err));
 
-                    // Delete Site Contacts Data
-                    SiteContacts.remove({ siteID: data.siteID });
+                        // Delete Site Contacts Data - not
+                        SiteContacts.find({ siteID: req.siteID }, (err, re) => { console.log('SiteContacts ', re) });
+                        SiteContacts.remove({ siteID: req.siteID }, err => console.log('success', err));
 
-                    // Delete Site
-                    Site.findByIdAndRemove(data.siteID, (err, result) => { 
-                        if(err) msg.err = `${msg.err} There was an error with deleting the Web Site with ID: ${data.siteID}! `;
-                        else msg.success = `${msg.success} Site was successfully deleted! `;
-                    });
+                        // Delete Site - need to be tested
+                        Site.findByIdAndRemove(req.siteID, (err, result) => {
+                            if (err) msg.err = `${msg.err} There was an error with deleting the Web Site with ID: ${req.siteID}! `;
+                            else msg.success = `${msg.success} Site was successfully deleted! `;
+                        });
 
-                    // Delete Auth Acc
-                    Auth.findByIdAndRemove(data.userId, (err, result) => { 
-                        if(err) msg.err = `${msg.err} There was an error with deleting the Auth account with ID: ${data.userId}! `;
-                        else msg.success = `${msg.success} Auth account was successfully deleted! `;
-                        res.json(msg);
-                    });
+                        // Delete Auth Acc - need to be tested
+                        Auth.findByIdAndRemove(req.userId, (err, result) => {
+                            if (err) msg.err = `${msg.err} There was an error with deleting the Auth account with ID: ${data.userId}! `;
+                            else msg.success = `${msg.success} Auth account was successfully deleted! `;
+                            res.json(msg);
+                        });
 
-                } catch (err) {
-                    return res.status(500).send(variables.errorMsg.type500.remove);
+                    } catch (err) {
+                        console.log('tuk 4')
+                        return res.status(500).send(variables.errorMsg.type500.remove);
+                    }
                 }
+            } else {
+                res.json(variables.errorMsg.type500.notfound);
             }
         });
     } else {
+        console.log('tuk 5')
         return res.status(401).send(variables.errorMsg.type500.invalidData);
     }
 });

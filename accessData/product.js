@@ -20,8 +20,10 @@ productRouter.post('/products', func.checkAuthenticated, (req, res) => {
         if (!!productData.quantity) by.quantity = productData.quantity;
         if (!!productData.categoryID) by.categoryID = productData.categoryID;
         Products.find(by, (err, response) => {
-            if (err) return res.json(variables.errorMsg.notfound);
-            res.send(response);
+            if (err) {
+                return res.json(variables.errorMsg.notfound);
+            }
+            return res.send(response);
         });
     } else {
         return res.status(500).send('Products -> ' + variables.errorMsg.serverError);
@@ -60,7 +62,7 @@ productRouter.post('/removeproducts', func.checkAuthenticated, async (req, res) 
         if (!!!req.siteID)
             return res.status(401).json(variables.errorMsg.unauthorized);
 
-        if (!!data.id) by._id = data.id;
+        if (!!data._id) by._id = data._id;
         if (!!data.categoryID) {
             by.siteID = req.siteID; // This will delete all products connected with that web site if we remove categories
             by.categoryID = data.categoryID;

@@ -14,7 +14,7 @@ var func = require('../func');
 InvoiceRouter.get('/invoices', func.checkAuthenticated, async (req, res) => {
     //Only Admin and Manager can check the data
     if (!!!req.siteID || !!!req.userId) {
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData);
     }
 
     let by = { siteID: req.siteID };
@@ -36,10 +36,10 @@ InvoiceRouter.get('/invoices', func.checkAuthenticated, async (req, res) => {
         if (req.userId == result.customerInvoiceID || req.authLevel == 'AD' || req.authLevel == 'MN') {
             res.send(result);
         } else {
-            return res.status(401).send({ message: 'Unauthorized' });
+            return res.status(401).send(variables.errorMsg.unauthorized);
         }
     } else {
-        return res.status(500).send('Customer Invoice Details -> ' + variables.errorMsg.type500.serverError);
+        return res.status(500).send('Customer Invoice Details -> ' + variables.errorMsg.serverError);
     }
 });
 
@@ -47,13 +47,13 @@ InvoiceRouter.get('/invoices', func.checkAuthenticated, async (req, res) => {
 /////////////////////////////////////////////////
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////
-// Requires data  By Customer/Employee it self to be on level CU or EE If edit need  (invoiceID)
-// Reuqires data  By Admin or Manager or Employee { customerID } If Edit need {invoiceID}
+// Requires data --> By Customer/Employee (level CU or EE) If edit need  {invoiceID}
+// Requires data --> By Admin or Manager or Employee { customerID } If Edit need {invoiceID}
 // TODO: Maybe need to be change the conditions of creation for v2 // data Update or creation access levels
 InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res) => {
     let data = req.body;
     if (!!!req.userId || !!!req.siteID || !!!req.authLevel) {
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData);
     }
 
     // Add by the customer itself
@@ -61,7 +61,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
         //Get Invoice Customers data
         InvoiceCustomerData.findOne({ customerID: req.userId }, (err, invoiceData) => {
             if (err)
-                return res.status(500).send(variables.errorMsg.type500.serverError);
+                return res.status(500).send(variables.errorMsg.serverError);
 
             data.customerID = req.userId;
             data.siteID = req.siteID;
@@ -70,7 +70,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
                 let newInvoice = new Invoices(data);
                 newInvoice.save((err, result) => {
                     if (err)
-                        return res.status(500).send(variables.errorMsg.type500.serverError);
+                        return res.status(500).send(variables.errorMsg.serverError);
                     return res.status(200).send(variables.successMsg.created);
                 });
             } else {
@@ -81,7 +81,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
                         return res.status(200).json({ data: update, message: 'Invoice data was successfully updated' }); // Sending the updated request call.
                     });
                 } else {
-                    return res.status(500).send(variables.errorMsg.type500.serverError);
+                    return res.status(500).send(variables.errorMsg.serverError);
                 }
             }
         });
@@ -91,14 +91,14 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
         // Get customers data
         Customers.findOne({ _id: data.customerID }, (err, customerData) => {
             if (err)
-                return res.status(500).send(variables.errorMsg.type500.serverError);
+                return res.status(500).send(variables.errorMsg.serverError);
             if (customerData == null)
                 return res.status(200).send({ message: 'There are no customers found!' });
             else {
 
                 InvoiceCustomerData.findOne({ customerID: data.customerID }, (err, invoiceData) => {
                     if (err)
-                        return res.status(500).send(variables.errorMsg.type500.serverError);
+                        return res.status(500).send(variables.errorMsg.serverError);
 
                     data.customerID = data.customerID;
                     data.siteID = req.siteID;
@@ -106,7 +106,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
                         let newInvoice = new Invoices(data);
                         newInvoice.save((err, result) => {
                             if (err)
-                                return res.status(500).send(variables.errorMsg.type500.serverError);
+                                return res.status(500).send(variables.errorMsg.serverError);
                             return res.status(200).send(variables.successMsg.created);
                         });
                     } else {
@@ -117,7 +117,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
                                 return res.status(200).json({ data: update, message: 'Invoice data was successfully updated' }); // Sending the updated request call.
                             });
                         } else {
-                            return res.status(500).send(variables.errorMsg.type500.serverError);
+                            return res.status(500).send(variables.errorMsg.serverError);
                         }
                     }
                 });
@@ -130,12 +130,12 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
 /////////////////////////////////////////////////
 /////////////////   REMOVE   ////////////////////
 /////////////////////////////////////////////////
-// all: boolean, cutomerID, InvoiceID
+// { all: boolean, cutomerID, InvoiceID }
 InvoiceRouter.post('/removeinvoices', func.checkAuthenticated, (req, res) => {
     let data = req.body;
     try {
         if (!!!req.siteID)
-            return res.status(400).send(variables.errorMsg.type401.invalidData);
+            return res.status(400).send(variables.errorMsg.invalidData);
 
         if (!!!data.all) data.all = false;
 
@@ -152,7 +152,7 @@ InvoiceRouter.post('/removeinvoices', func.checkAuthenticated, (req, res) => {
             //Remove by Invoice ID
         } else if (!data.all && !!data.invoiceID) {
             Invoices.findByIdAndRemove(data.invoiceID, (err, results) => {
-                if (err) return res.status(500).send(variables.errorMsg.type500.notfound);
+                if (err) return res.status(500).send(variables.errorMsg.notfound);
             });
         } else {
             return res.status(200).json({ message: 'There was no data for deleting' });
@@ -160,7 +160,7 @@ InvoiceRouter.post('/removeinvoices', func.checkAuthenticated, (req, res) => {
         res.status(200).json(variables.successMsg.remove);
 
     } catch (err) {
-        return res.status(500).send(variables.errorMsg.type500.notfound);
+        return res.status(500).send(variables.errorMsg.notfound);
     }
 });
 

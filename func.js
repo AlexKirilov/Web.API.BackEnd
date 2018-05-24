@@ -18,18 +18,18 @@ let func = {
         }
         return key;
     },
-    createToken: (res, user, site) => { //TODO Add Site ID, Public Key and LevelOfAuth
-        let encrKey = variables.masterKey + site.publicKey + user.levelAuth; // TODO TEST if needs to change LevelOfAuth
+    createToken: (res, user, site) => {
+        let encrKey = variables.masterKey + site.publicKey + user.levelAuth;
         let payload = { sub: user.id, type: user.levelAuth };
        
         let SiteData = `${user.levelAuth} ${site.publicKey}`;
         let WebSite = `ID ${site._id}`     
         let token = jwt.encode(payload, encrKey);
-        res.status(200).send({ token, SiteData, WebSite });
+        return res.status(200).send({ token, SiteData, WebSite });
     },
     checkAuthenticated: (req, res, next) => {
         if (!req.header('Authorization'))
-            return res.status(401).send(variables.errorMsg.type401.unauthorized);
+            return res.status(401).send(variables.errorMsg.unauthorized);
 
         let token = req.header('Authorization').split(' ')[1]; // [0] removing the 'token' string
         let siteData = req.header('SiteData').split(' '); // [0] LevelOfAuth + [1] Public Key
@@ -40,44 +40,21 @@ let func = {
         let decryptKey = variables.masterKey + publicKey + levelOfAuth;
         let payload = jwt.decode(token, decryptKey);
         if (!payload)
-            return res.status(401).send(variables.errorMsg.type401.unauthorized);
+            return res.status(401).send(variables.errorMsg.unauthorized);
 
         req.userId = payload.sub;
         req.siteID = siteID;
         req.authLevel = levelOfAuth;
         next();
-    }, // .post('/login', checkAuthenticated, async (req, res) => {
+    },
     getSiteID: (req, res, next) => {
         if (!req.header('WebSite'))
-            return res.status(401).send(variables.errorMsg.type401.unauthorized);
+            return res.status(401).send(variables.errorMsg.unauthorized);
 
         let siteID = req.header('WebSite').split(' ')[1]; // [0] removing the 'ID' string
         req.siteID = siteID;
         next();
-    }, // .post('/login', getSiteID, async (req, res) => {
-    //     //TODO: This may be deleted
-    // request: (req, method, path, callback) => {
-    //     let port = 3000;
-    //     if (req.protocol == 'http') port = 3000; // should goes to 80
-    //     if (req.protocol == 'https') port = 443;
-    //     let options = {
-    //         hostname: req.hostname,
-    //         port, // http 80 https 443
-    //         path,method, headers: { 'Content-Type': 'application/json', 'Authorization': req.headers.authorization, 'SiteData': req.headers.SiteData, 'WebSite': req.headers.WebSite},
-    //     };
-
-    //     console.error('Authorizationnnnnnnnnnnnnnnnn ', req.headers.authorization);
-    //     console.error('SiteDataaaaaaaaaaaaaaaaaaaaaa ', req.headers.SiteData);
-    //     http.request(options, function (res) {
-    //         // console.log('STATUS: ' + res.statusCode);
-    //         console.log('HEADERS: ' + JSON.stringify(res.headers));
-    //         res.setEncoding('utf8');
-    //         res.on('data', function (chunk) {
-    //             console.log('BODY: ' + chunk);
-    //             console.log('*****************************************************');
-    //         });
-    //     }).end(callback());
-    // },
+    },
     currentDate() {
         let today = new Date();
         let dd = today.getDate();

@@ -22,8 +22,10 @@ let variables = require('../var');
 // GU -> Guest
  */
 
-// Last Login
-// Created Account
+/////////////////////////////////////////////////
+///////////////////    GET    ///////////////////
+/////////////////////////////////////////////////
+
 authRouter.post('/login', async (req, res) => {
     let loginData = req.body;
     if (loginData && loginData.password && loginData.email &&
@@ -32,24 +34,40 @@ authRouter.post('/login', async (req, res) => {
         func.validateEmail(loginData.email)
     ) {
         let auth = await Auth.findOne({ email: loginData.email }, '-__v -firstname -lastname')
-        if (auth == void 0)
-            return res.status(401).send(variables.errorMsg.type401.invalidCreds)
+        if (auth == null)
+            return res.status(400).send(variables.errorMsg.notfound); // Changed
 
         auth.lastLogin = func.currentDate();
         await Site.findById(auth.siteID, (err, resultData) => {
             bcrypt.compare(loginData.password, auth.password, (err, isMatch) => {
                 if (!isMatch) {
-                    return res.status(401).send(variables.errorMsg.type401.invalidCreds);
+                    return res.status(401).send(variables.errorMsg.unauthorized); // Changed
                 }
                 auth.save(auth, (err, newUser) => {
-                    if (err) return res.status(500).send(variables.errorMsg.type500.newUser)
+                    if (err) return res.status(500).send(variables.errorMsg.update); // Changed
                 });
                 func.createToken(res, auth, resultData);
             });
         });
     } else
-        return res.status(401).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
 });
+
+authRouter.post('/checkForUser', (req, res) => {
+    let userData = req.body;
+    if (!!userData && userData.email.trim() != '' && func.validateEmail(userData.email)) {
+        Auth.findOne({ email: userData.email }, (err, results) => {
+            if (err) return res.status(400).send(variables.errorMsg.notfound); // Changed
+            res.json({ exist: (results !== null) });
+        });
+    } else {
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    }
+});
+
+/////////////////////////////////////////////////
+////////////// POST (NEW / UPDATE) //////////////
+/////////////////////////////////////////////////
 
 authRouter.post('/register', async (req, res) => {
     let userData = req.body;
@@ -70,7 +88,7 @@ authRouter.post('/register', async (req, res) => {
             let site = new Site(newsite);
             site.save((err, newUser) => {
                 if (err) {
-                    return res.status(500).send(variables.errorMsg.type500.newUser)
+                    return res.status(500).send(variables.errorMsg.created); // Changed
                 }
 
                 // Default Values for Auth Acc
@@ -92,32 +110,20 @@ authRouter.post('/register', async (req, res) => {
 
                 // Create Web Site API ACC
                 auth.save((err, newUser) => {
-                    if (err) {
-                        return res.status(500).send(variables.errorMsg.type500.newUser)
-                    }
+                    if (err)
+                        return res.status(500).send(variables.errorMsg.update); // Changed
                     customer.save((err, newUser) => {
-                        if (err) return res.status(500).send(variables.errorMsg.type500.newUser)
+                        if (err)
+                            return res.status(500).send(variables.errorMsg.update); // Changed
                     });
                     func.createToken(res, newUser, site);
                 });
             });
         } else {
-            return res.json({ message: 'Current Email address already exists!' });
+            return res.json(variables.errorMsg.exists); // Changed
         }
     } else {
-        return res.status(401).send(variables.errorMsg.type500.invalidData);
-    }
-});
-
-authRouter.post('/checkForUser', (req, res) => {
-    let userData = req.body;
-    if (!!userData && userData.email.trim() != '' && func.validateEmail(userData.email)) {
-        Auth.findOne({ email: userData.email }, (err, results) => {
-            if (err) return res.status(500).send(variables.errorMsg.type500.serverError);
-            res.json({ exist: (results !== null) });
-        });
-    } else {
-        return res.status(401).send(variables.errorMsg.type500.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
     }
 });
 
@@ -127,91 +133,86 @@ authRouter.post('/changeauthlevel', func.checkAuthenticated, async (req, res) =>
     if (!!req.userId && !!userData && !!req.levelAuth) {
         Auth.findById(req.userId, (err, rest) => {
             if (err || (rest.levelAuth !== 'AD' && rest.levelAuth !== 'SA')) {
-                return res.status(401).send(variables.errorMsg.type401.invalidCreds);
+                return res.status(401).send(variables.errorMsg.unauthorized); // Changed
             } else {
                 Customer.findById(userData.customerID, (err, result) => {
                     if (err) {
-                        return res.json({ message: 'Customer was not found' })
+                        return res.status(400).send(variables.errorMsg.notfound); // Changed
                     } else {
-                        result.levelAuth = userData.levelAuth; //TODO Need to change with the real code
+                        result.levelAuth = userData.levelAuth;
                         switch (userData.levelAuth) {
                             case 'AD': result.type = 'Admin'; break;
                             case 'MN': result.type = 'Manager'; break;
                             case 'EE': result.type = 'Employee'; break;
                             case 'CU': result.type = 'Customer'; break;
                         }
-                        Customer.findByIdAndUpdate(userData.customerID, result, (err, result) => { //variables.successMsg.update
-                            if (err) return res.json(variables.errorMsg.type500.update);
-                            res.status(200).send({ message: 'Customers access level was updated successfully' });
+                        Customer.findByIdAndUpdate(userData.customerID, result, (err, result) => {
+                            if (err) return res.json(variables.errorMsg.update); // Changed
+                            res.status(200).send(variables.successMsg.update); // Changed
                         });
                     }
                 });
             }
         })
     } else {
-        return res.status(401).send(variables.errorMsg.type500.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
     }
 });
-// TODO: Delete function if the user is SysAdmin
-// TODO: Need to be tested with all data
-// Removing the Customer Delete all DB connected with the customer
+
+/////////////////////////////////////////////////
+////////////////    DELETE    ///////////////////
+/////////////////////////////////////////////////
+
+// TODO: Delete function if the user is SysAdmin for v2
+// Removing the Auth will Delete all DB connected with the that customer
 authRouter.post('/deleteauthuserandsitedata', func.checkAuthenticated, async (req, res) => {
     let data = req.body;
     if (!!data && !!req.userId && !!req.siteID) {
-        console.log('tuk 1')
         Auth.findById(req.userId, (err, rest) => {
             if (rest != null) {
                 if (!!err || (rest.levelAuth !== 'AD' && rest.levelAuth !== 'SA') || req.userId != rest._id) {
-                    return res.status(401).send(variables.errorMsg.type401.invalidCreds);
+                    return res.status(400).send(variables.errorMsg.invalidData); // Changed
                 } else {
                     try {
-                        console.log('tuk 3', req.siteID)
                         let msg = { success: '', err: '' }
                         // Delete all Products - not
-                        Products.find({ siteID: req.siteID }, (err, re) => { console.log('Products ', re) });
-                        Products.remove({ siteID: req.siteID }, err => console.log('success', err));
+                        Products.remove({ siteID: req.siteID }, err => err);
 
                         // Delete all Customers - not
-                        Customer.find({ siteID: req.siteID }, (err, re) => { console.log('Customer ', re) });
-                        Customer.remove({ siteID: req.siteID }, err => console.log('success', err));
+                        Customer.remove({ siteID: req.siteID }, err => err);
 
                         // Delete all Invoices - not
-                        Invoices.find({ siteID: req.siteID }, (err, re) => { console.log('Invoices ', re) });
-                        Invoices.remove({ siteID: req.siteID }, err => console.log('success', err));
+                        Invoices.remove({ siteID: req.siteID }, err => err);
 
                         // Delete all Invoice Data - not
-                        InvoiceCustomerData.find({ siteID: req.siteID }, (err, re) => { console.log('InvoiceCustomerData ', re) });
-                        InvoiceCustomerData.remove({ siteID: req.siteID }, err => console.log('success', err));
+                        InvoiceCustomerData.remove({ siteID: req.siteID }, err => err);
 
                         // Delete Site Contacts Data - not
-                        SiteContacts.find({ siteID: req.siteID }, (err, re) => { console.log('SiteContacts ', re) });
-                        SiteContacts.remove({ siteID: req.siteID }, err => console.log('success', err));
+                        SiteContacts.remove({ siteID: req.siteID }, err => err);
 
                         // Delete Site - need to be tested
                         Site.findByIdAndRemove(req.siteID, (err, result) => {
-                            if (err) msg.err = `${msg.err} There was an error with deleting the Web Site with ID: ${req.siteID}! `;
-                            else msg.success = `${msg.success} Site was successfully deleted! `;
+                            if (err) msg.err = ` Web Site with ID: ${req.siteID} and`;
+                            else msg.success = ``;
                         });
 
                         // Delete Auth Acc - need to be tested
                         Auth.findByIdAndRemove(req.userId, (err, result) => {
-                            if (err) msg.err = `${msg.err} There was an error with deleting the Auth account with ID: ${data.userId}! `;
-                            else msg.success = `${msg.success} Auth account was successfully deleted! `;
+                            if (err) msg.err = `There was an error with deleting of the${msg.err} Auth account with ID: ${data.userId}! `;
+                            else msg.success = `Database tables were successfully deleted! `;
                             res.json(msg);
                         });
 
                     } catch (err) {
-                        console.log('tuk 4')
-                        return res.status(500).send(variables.errorMsg.type500.remove);
+                        return res.status(500).send(variables.errorMsg.remove); // Changed
                     }
                 }
             } else {
-                res.json(variables.errorMsg.type500.notfound);
+                return res.json(variables.errorMsg.notfound); // Changed
             }
         });
     } else {
-        console.log('tuk 5')
-        return res.status(401).send(variables.errorMsg.type500.invalidData);
+        return res.status(401).send(variables.errorMsg.unauthorized); // Changed
     }
 });
 

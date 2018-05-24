@@ -1,29 +1,23 @@
+let func = require('../func');
 let jwt = require('jwt-simple');
+let variables = require('../var');
+let Site = require('../models/Site');
 let bcrypt = require('bcrypt-nodejs');
 let Customers = require('../models/Customers');
-let Site = require('../models/Site');
 let express = require('express');
 let customerRouter = express.Router();
-let func = require('../func');
-let variables = require('../var');
-
-let Products = require('../models/store/Products');
-// let InvoiceCustomerData = require('../models/store/InvoiceCustomerData');
-
+//Customer password should be possible to be changed
 /* Level of Auth
-// SA -> SysAdmin
 // AD -> Admin
 // MN -> Manager
 // EE -> Employee
 // CU -> Customer
-// GU -> Guest
  */
 
-// TODO: Get customers by Site
 /////////////////////////////////////////////////
 ///////////////////    GET    ///////////////////
 /////////////////////////////////////////////////
-
+//Required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/login', async (req, res) => {
     let loginData = req.body;
     if (loginData && loginData.password && loginData.email &&
@@ -33,7 +27,7 @@ customerRouter.post('/login', async (req, res) => {
     ) {
         let customer = await Customers.findOne({ email: loginData.email }, '-__v -GDPR -created');
         if (customer == void 0)
-            return res.status(401).send(variables.errorMsg.type401.invalidCreds)
+            return res.status(400).send(variables.errorMsg.notfound); // Changed
 
         //Getting Site Data
         let siteData = await Site.findOne({ _id: customer.siteID }, '-__v -name');
@@ -41,37 +35,38 @@ customerRouter.post('/login', async (req, res) => {
         //Creating the token and the auth data
         bcrypt.compare(loginData.password, customer.password, (err, isMatch) => {
             if (!isMatch) {
-                return res.status(401).send(variables.errorMsg.type401.invalidCreds)
+                return res.status(401).send(variables.errorMsg.unauthorized); // Changed
             }
 
             //Save the login time
             customer.lastLogin = func.currentDate();
             Customers.findByIdAndUpdate(customer._id, customer, (err, result) => { //variables.successMsg.update
-                if (err) return res.json(variables.errorMsg.type500.update);
+                if (err) return res.json(variables.errorMsg.update); // Changed
             });
 
-            func.createToken(res, customer, siteData); //TODO: Send and the FName / LName
+            func.createToken(res, customer, siteData); //TODO: Send and the FName / LName for v2
         });
     } else
-        return res.status(401).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
 });
-//{ "email": "admin@mail.com"}
+
+//Required data for this call -> { "email": "mail@mail.com" }
 customerRouter.post('/checkForUser', async (req, res) => {
     let userData = req.body;
     if (userData && userData.email.trim() != '' && func.validateEmail(userData.email)) {
         let customer = await Customers.findOne({ email: userData.email })
-        if (customer !== null) {
-            return res.status(200).send({ exist: true })
-        }
-        res.status(200).send({ exist: false });
+        if (customer !== null)
+            return res.status(200).send({ exists: true });
+        return res.status(200).send({ exists: false });
     } else {
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
     }
 });
 
 /////////////////////////////////////////////////
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////
+// As minimum required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/register', func.getSiteID, async (req, res) => {
     let data = req.body;
     if (req.siteID && data && data.password && data.email &&
@@ -95,67 +90,62 @@ customerRouter.post('/register', func.getSiteID, async (req, res) => {
             let siteData = await Site.findOne({ _id: req.siteID }, '-__v -name');
             let customer = new Customers(data);
             customer.save((err, result) => {
-                if (err) {
-                    return res.status(500).send(variables.errorMsg.type500.newUser)
-                }
+                if (err)
+                    return res.status(500).send(variables.errorMsg.update); // Changed
                 func.createToken(res, result, siteData);
             });
         } else {
-            return res.json({ message: 'Email address is already taken!' })
+            return res.json(variables.errorMsg.exists) // { message: 'Email address is already taken!' } // Changed
         }
     } else
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
 });
 
+// As minimum required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/editcustomer', func.checkAuthenticated, (req, res) => {
     let data = req.body;
     if (!!data && !!data.password && !!data.email && func.validateEmail(data.email)) {
         Customers.findByIdAndUpdate(req.userId, data, (err, result) => {
-            if (!err) res.status(200).send(result);
-            else res.status(500).send(variables.errorMsg.type500.notfound);
+            if (!err) return res.status(200).send(result);
+            else return res.status(400).send(variables.errorMsg.notfound); // Changed
         });
     } else
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
 });
 
 /////////////////////////////////////////////////
 ////////////////    DELETE    ///////////////////
 /////////////////////////////////////////////////
-// TODO Changes here
 
-// DELETE Customers by self
-// DELETE from Admin or Manager by CustomersID or Customers Email
+// DELETE Customers by them self`s required data {} - NaN
+// DELETE from Admin or Manager by CustomersID or Customers Email required data {customerID or email} - NaN
 customerRouter.post('/deletecustomer', func.checkAuthenticated, (req, res) => {
     let data = req.body;
     if (!!!req.siteID || !!!req.userId || !!!req.authLevel)
-        return res.status(500).json({ message: 'Unauthorized' });
+        return res.status(401).send(variables.errorMsg.unauthorized); // Changed
 
     if (req.levelAuth == 'CU') {
         Customers.findByIdAndRemove(req.userId, (err, removed) => {
-            if (!err) return res.status(200).send(variables.successMsg.remove);
-            else return res.status(500).send(variables.errorMsg.type500.notfound);
+            if (!err) return res.status(200).send(variables.successMsg.remove); // Changed
+            else return res.status(404).send(variables.errorMsg.notfound); // Changed
         });
     } else if ((!!data.customerID || !!data.email) && (req.authLevel == 'AD' || req.authLevel == 'MN')) {
         let by = {}
-        console.log('IN 4')
         if (!!data.customerID) by._id = data.customerID;
         if (!!data.email) by.email = data.email;
-        console.log('search by: ', by)
         Customers.find(by, (err, results) => {
-            console.log('results', results)
             if (err)
-                return res.status(500).json(variables.errorMsg.type500.serverError);
+                return res.status(400).send(variables.errorMsg.notfound); // Changed
             if (results.length == 0)
-                return res.status(200).json({ message: 'There are no Customers found with this ID!' });
+                return res.status(200).json(variables.errorMsg.notfound); //{ message: 'There are no Customers found with this ID!' }
             else {
                 Customers.remove(by, (err, removed) => {
-                    return res.status(200).json({ message: 'Customer was successfully deleted' });
+                    return res.status(200).json(variables.successMsg.remove); // Changed
                 });
             }
         });
     } else {
-        console.log('IN 5')
-        return res.json(variables.errorMsg.type401.invalidData);
+        return res.status(401).send(variables.errorMsg.unauthorized); // Changed
     }
 });
 

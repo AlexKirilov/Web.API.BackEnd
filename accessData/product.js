@@ -16,27 +16,26 @@ productRouter.post('/products', func.checkAuthenticated, (req, res) => {
     if (!!productData && !!req.siteID) {
         by = { siteID: req.siteID };
         if (!!productData.name) by.name = { "$regex": productData.name, "$options": 'i' };
-        if (!!productData.price) by.price = productData.price;              // TODO: Search between min and max price
+        if (!!productData.price) by.price = productData.price; // TODO: Search between min and max price
         if (!!productData.quantity) by.quantity = productData.quantity;
-        if (!!productData.categoryID) by.categoryID = productData.categoryID;     // TODO: Change Category functionality
-        console.log(by)
+        if (!!productData.categoryID) by.categoryID = productData.categoryID;
         Products.find(by, (err, response) => {
-            if (err) return res.json(variables.errorMsg.type500.notfound);
+            if (err) return res.json(variables.errorMsg.notfound);
             res.send(response);
         });
     } else {
-        return res.status(500).send('Products -> ' + variables.errorMsg.type500.serverError);
+        return res.status(500).send('Products -> ' + variables.errorMsg.serverError);
     }
 });
 
 /////////////////////////////////////////////
 ////////////// POST /////////////////////////
 /////////////////////////////////////////////
-
+// Required data { name : 'name' }
 productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => { //TODO Only if it`s Admin or Manager
     let productData = req.body;
     if (!!!req.siteID || (!!!productData.name || productData.name.trim() == '')) {
-        return res.status(400).send(variables.errorMsg.type401.invalidData);
+        return res.status(400).send(variables.errorMsg.invalidData);
     }
 
     productData.siteID = req.siteID;
@@ -44,9 +43,9 @@ productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => { //
     let newProduct = new Products(productData);
     newProduct.save((err, newProd) => {
         if (err) {
-            return res.status(500).send(variables.errorMsg.type500.serverError);
+            return res.status(500).send(variables.errorMsg.serverError);
         }
-        res.status(200).send(variables.successMsg.created); //TODO: change message
+        return res.status(200).send(variables.successMsg.created);
     });
 });
 
@@ -59,35 +58,32 @@ productRouter.post('/removeproducts', func.checkAuthenticated, async (req, res) 
     let by = {};
     try {
         if (!!!req.siteID)
-            return res.status(401).json({ message: 'Unauthorized' });
+            return res.status(401).json(variables.errorMsg.unauthorized);
 
         if (!!data.id) by._id = data.id;
         if (!!data.categoryID) {
-            by.siteID = req.siteID; // This will delete all products coneccted with that web site if we remove categories
+            by.siteID = req.siteID; // This will delete all products connected with that web site if we remove categories
             by.categoryID = data.categoryID;
         }
 
-        Products.find(by, (err, r) => console.log(err, r));
         Products.remove(by, err => {
             res.status(201).send(variables.successMsg.remove);
         });
     } catch (err) {
-        return res.json(variables.errorMsg.type500.notfound);
+        return res.json(variables.errorMsg.notfound);
     }
 });
-
-
+// Dangerous function
 productRouter.post('/removeAllProductByCategory', func.checkAuthenticated, async (req, res) => {
     let data = req.body;
     try {
-
         let by = { siteID: req.siteID, categoryID: data.categoryID }
         // This will delete all products connected with that category or subcategory
         Products.remove(by).exec(
             res.status(201).send(variables.successMsg.remove)
         );
     } catch (err) {
-        return res.json(variables.errorMsg.type500.notfound);
+        return res.json(variables.errorMsg.notfound);
     }
 });
 
@@ -96,14 +92,14 @@ productRouter.post('/removeAllProductByCategory', func.checkAuthenticated, async
 productRouter.post('/removeAllproductsByCustomer', func.checkAuthenticated, async (req, res) => {
     try {
         if (req.userId == void 0)
-            return res.status(400).send(variables.errorMsg.type401.invalidData);
+            return res.status(400).send(variables.errorMsg.invalidData);
 
         // This will delete all products connected with that customer
         Products.remove({ customer: req.userId }).exec(
             res.status(201).send(variables.successMsg.remove)
         );
     } catch (err) {
-        return res.json(variables.errorMsg.type500.notfound);
+        return res.json(variables.errorMsg.notfound);
     }
 });
 */

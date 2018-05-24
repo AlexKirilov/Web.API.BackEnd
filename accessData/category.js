@@ -4,7 +4,8 @@ let express = require('express');
 let categoryRouter = express.Router();
 let func = require('../func');
 let variables = require('../var');
-//READY
+//READY // DB need to be think of the Personal Site Categories ?????
+//ADD Delete category ?
 
 /////////////////////////////////////////////
 ////////////// GET //////////////////////////
@@ -23,10 +24,10 @@ categoryRouter.post('/subcategories', async (req, res) => {
 });
 
 // All sub categories
-categoryRouter.post('/allsubcategories', async (req, res) => {
-    let data = await Categories.find({});
-    res.send(data);
-});
+// categoryRouter.post('/allsubcategories', async (req, res) => {
+//     let data = await Categories.find({});
+//     res.send(data);
+// });
 
 
 /////////////////////////////////////////////
@@ -44,13 +45,13 @@ categoryRouter.post('/createcategory', (req, res) => {
 
     // Check if category name already exists
     let ifCatExist = Categories.find({ name: data.name }, (err, results) => {
-        if (err) return res.status(500).send(variables.errorMsg.type500.serverError);
+        if (err) return res.status(500).send(variables.errorMsg.serverError);  // Changed
         if (results.length == 0) {
             let newCategory = new Categories(data);
             newCategory.save((err, result) => {
                 if (err)
-                    return res.status(500).send(variables.errorMsg.type500.serverError);
-                res.status(200).send(variables.successMsg.created); //TODO: change message
+                    return res.status(500).send(variables.errorMsg.serverError);
+                return res.status(200).send(variables.successMsg.created); //TODO: change message
             });
         } else {
             res.json({ message: 'This category name is already taken!' }); //TODO: change message
@@ -58,7 +59,7 @@ categoryRouter.post('/createcategory', (req, res) => {
     });
 });
 
-// Requirment data { "name": "clothes"}
+// Required data { "name": "clothes"}
 categoryRouter.post('/checkForExistingCategory', async (req, res) => {
     let data = req.body;
     if (data && data.name.trim() != '') {

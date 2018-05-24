@@ -1,4 +1,3 @@
-//TODO: DELETE ME IF I AM NOT NEEDED
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 

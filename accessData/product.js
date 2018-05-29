@@ -26,7 +26,7 @@ productRouter.post('/products', func.checkAuthenticated, (req, res) => {
             return res.send(response);
         });
     } else {
-        return res.status(500).send('Products -> ' + variables.errorMsg.serverError);
+        return res.status(500).send(variables.errorMsg.serverError);
     }
 });
 
@@ -34,21 +34,28 @@ productRouter.post('/products', func.checkAuthenticated, (req, res) => {
 ////////////// POST /////////////////////////
 /////////////////////////////////////////////
 // Required data { name : 'name' }
-productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => { //TODO Only if it`s Admin or Manager
+productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => { // SPOTTODO Only if it`s Admin or Manager
     let productData = req.body;
     if (!!!req.siteID || (!!!productData.name || productData.name.trim() == '')) {
         return res.status(400).send(variables.errorMsg.invalidData);
     }
 
-    productData.siteID = req.siteID;
-
-    let newProduct = new Products(productData);
-    newProduct.save((err, newProd) => {
-        if (err) {
-            return res.status(500).send(variables.errorMsg.serverError);
-        }
-        return res.status(200).send(variables.successMsg.created);
-    });
+    if(!!productData.sort) productData.sort = productData.sort.filter(function(n){ return n != undefined && n.trim() != ''; }); 
+    if(!!productData._id) {
+        Products.findByIdAndUpdate(productData._id, productData, (err, result) => {
+            if(err)  return res.status(500).send(variables.errorMsg.serverError);
+            return res.status(200);
+        });
+    } else {
+        productData.siteID = req.siteID;
+        let newProduct = new Products(productData);
+        newProduct.save((err, newProd) => {
+            if (err) {
+                return res.status(500).send(variables.errorMsg.serverError);
+            }
+            return res.status(200).send(variables.successMsg.created);
+        });
+    }
 });
 
 /////////////////////////////////////////////////

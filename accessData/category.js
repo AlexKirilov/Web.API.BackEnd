@@ -11,15 +11,15 @@ let variables = require('../var');
 ////////////// GET //////////////////////////
 /////////////////////////////////////////////
 // All Categories without SubCategories
-categoryRouter.get('/categories', async (req, res) => {
-    let data = await Categories.find({ "parentId": null });
+categoryRouter.get('/categories', func.getSiteID, async (req, res) => {
+    let data = await Categories.find({ siteID: req.siteID, "parentId": null });
     res.send(data);
 });
 
 // All Sub Categories by parent category ID
 // Required data {"type":"5b0428384953411bd455bb90"}
-categoryRouter.post('/subcategories', async (req, res) => {
-    let data = await Categories.find({ "parentId": req.type });
+categoryRouter.post('/subcategories', func.getSiteID, async (req, res) => {
+    let data = await Categories.find({ siteID: req.siteID, "parentId": req.type });
     res.send(data);
 });
 
@@ -34,17 +34,21 @@ categoryRouter.post('/subcategories', async (req, res) => {
 ////////////// POST /////////////////////////
 /////////////////////////////////////////////
 // Required data { "name": "bmw", "type":"5b0428384953411bd455bb90", "parentId":"5b05149b8d9e8024cc528527"}
-categoryRouter.post('/createcategory', (req, res) => {
+categoryRouter.post('/createcategory', func.getSiteID, (req, res) => {
     let data = req.body;
     data.name = data.name.toLowerCase();
     // Add default category if missing
+    if (!!!req.siteID)
+        return res.status(500).json(variables.errorMsg.invalidData);
     if (!!!data.type) data.type = SiteType.findOne({ name: 'store' })._id; // Temporary check till version 2 of the app
     if (!!!data.name || data.name.trim() == '' || !!!data.type) {
         return res.status(400).json({ message: 'There are missing data. Please fill all data and try again!' });
     }
 
+    let by = { siteID: req.siteID, name: data.name };
+    data.siteID = req.siteID;
     // Check if category name already exists
-    let ifCatExist = Categories.find({ name: data.name }, (err, results) => {
+    let ifCatExist = Categories.find(by, (err, results) => {
         if (err) return res.status(500).send(variables.errorMsg.serverError);  // Changed
         if (results.length == 0) {
             let newCategory = new Categories(data);
@@ -60,13 +64,22 @@ categoryRouter.post('/createcategory', (req, res) => {
 });
 
 // Required data { "name": "clothes"}
-categoryRouter.post('/checkForExistingCategory', async (req, res) => {
+categoryRouter.post('/checkForExistingCategory', func.getSiteID, async (req, res) => {
     let data = req.body;
     if (data && data.name.trim() != '') {
-        let type = await Categories.findOne({ name: data.name })
+        let type = await Categories.findOne({ siteID: req.siteID, name: data.name })
         if (type !== null)
             return res.json({ exist: true })
         res.json({ exist: false });
+    }
+});
+
+// Required data { "_id": "3123"}
+// TODO: Create POSTMAN call and add to datastore file
+categoryRouter.post('/remove', func.getSiteID, (req, res) => {
+    let data = req.body;
+    if (!!data && !!data._id) {
+        Categories.remove({ siteID: req.siteID, name: data.name }, err => res.json('Category was deleted') )
     }
 });
 

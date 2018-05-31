@@ -71,16 +71,21 @@ authRouter.post('/checkForUser', (req, res) => {
 
 authRouter.post('/register', async (req, res) => {
     let userData = req.body;
-    if (userData && userData.password && userData.email && userData.siteName && userData.siteTypeID &&
-        userData.password != void 0 && userData.email != void 0 && userData.siteName != void 0 && userData.siteTypeID != void 0 &&
-        userData.password.trim() != '' && userData.email.trim() != '' && userData.siteName.trim() != '' && userData.siteTypeID.trim() != '' &&
+
+    if (userData && userData.password && userData.email && userData.siteName &&
+        userData.password != void 0 && userData.email != void 0 && userData.siteName != void 0 &&
+        userData.password.trim() != '' && userData.email.trim() != '' && userData.siteName.trim() != '' &&
         func.validateEmail(userData.email)
     ) {
         let isAuthExist = await Customer.find({ email: userData.email });
         let isCustExist = await Customer.find({ email: userData.email });
+
         if (isAuthExist.length == 0 && isCustExist.length == 0) {
             // Get Site Type ID
-            let siteType = await SiteType.find({ name: userData.siteTypeID }); // TODO: Look the siteTypeID
+            let siteType
+            if (!!userData.siteTypeID)
+                siteType = await SiteType.find({ name: userData.siteTypeID }); // TODO: Look the siteTypeID
+            else siteType = await SiteType.find({ name: '5b0428384953411bd455bb90' }); //Type Store
             // Create Site
             let sitePublicKey = func.generatePublicKey();
             let newsite = { name: userData.siteName, publicKey: sitePublicKey, type: siteType._id }

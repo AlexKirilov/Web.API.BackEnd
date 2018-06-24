@@ -67,6 +67,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
             data.siteID = req.siteID;
 
             if (invoiceData == null) {
+                data.flag = 1;
                 let newInvoice = new Invoices(data);
                 newInvoice.save((err, result) => {
                     if (err)
@@ -103,6 +104,7 @@ InvoiceRouter.post('/addOrEditInvoice', func.checkAuthenticated, async (req, res
                     data.customerID = data.customerID;
                     data.siteID = req.siteID;
                     if (invoiceData == null) {
+                        data.flag = 0;
                         let newInvoice = new Invoices(data);
                         newInvoice.save((err, result) => {
                             if (err)

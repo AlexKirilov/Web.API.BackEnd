@@ -15,6 +15,7 @@ var invoicesSchema = new mongoose.Schema({
     phone: Number,
     countryPhoneCode: String,
     GDPR: Boolean,
+    flag: Number,
 });
 
 module.exports = mongoose.model('Invoices', invoicesSchema);

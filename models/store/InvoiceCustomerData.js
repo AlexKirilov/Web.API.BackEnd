@@ -13,7 +13,7 @@ var cuInvoiceDetailsSchema = new mongoose.Schema({
     postcode: String,
     phone: Number,
     countryPhoneCode: String,
-    GDPR: Boolean,
+    GDPR: Boolean, // We may not need this here
 });
 
 module.exports = mongoose.model('CustomerInvoiceData', cuInvoiceDetailsSchema);

@@ -3,6 +3,7 @@ let jwt = require('jwt-simple');
 let variables = require('../var');
 let Site = require('../models/Site');
 let bcrypt = require('bcrypt-nodejs');
+let Auth = require('../models/Auth');
 let Customers = require('../models/Customers');
 let express = require('express');
 let customerRouter = express.Router();
@@ -47,7 +48,7 @@ customerRouter.post('/login', async (req, res) => {
             func.createToken(res, customer, siteData); //TODO: Send and the FName / LName for v2
         });
     } else
-        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+        return res.status(400).send(variables.errorMsg.invalidData) // Changed
 });
 
 //Required data for this call -> { "email": "mail@mail.com" }
@@ -58,6 +59,35 @@ customerRouter.post('/checkForUser', async (req, res) => {
         if (customer !== null)
             return res.status(200).send({ exists: true });
         return res.status(200).send({ exists: false });
+    } else {
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    }
+});
+
+//Required data for this call -> { "email": "mail@mail.com" }
+customerRouter.get('/getCustomer', func.checkAuthenticated, async (req, res) => {
+    let data = req.body;
+    if (!!!req.siteID || !!!req.userId || !!!req.authLevel) {
+        let customer = await Customers.findOne({ siteID: req.siteID, _id: req.userId,  })
+        if (customer !== null)
+            return res.status(200).send(customer);
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    } else {
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    }
+});
+
+//Required data for this call -> { "email": "mail@mail.com" }
+customerRouter.get('/getAuthCustomer', func.checkAuthenticated, async (req, res) => {
+    if (!!req.siteID || !!req.userId || !!req.authLevel) {
+        let customer = null;
+        let auth = await Auth.findOne({ siteID: req.siteID, _id: req.userId})
+        if (auth !== null)
+            customer = await Customers.findOne({ siteID: req.siteID, email: auth.email })
+        if (customer !== null)
+            return res.status(200).send(customer);
+        // return res.status(200).send({ exists: false });
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
     } else {
         return res.status(400).send(variables.errorMsg.invalidData); // Changed
     }

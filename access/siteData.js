@@ -2,6 +2,7 @@ let jwt = require('jwt-simple');
 let bcrypt = require('bcrypt-nodejs');
 let SiteContacts = require('../models/SiteContacts');
 let Auth = require('../models/Auth');
+let Customers = require('../models/Customers');
 let express = require('express');
 let siteDataRouter = express.Router();
 let func = require('../func');
@@ -24,7 +25,24 @@ siteDataRouter.post('/getsitecontacts', func.getSiteID, (req, res) => {
             return res.json(variables.errorMsg.notfound);
 
         return res.status(200).send(results);
-    })
+    });
+});
+
+siteDataRouter.get('/getAuthSiteContacts', func.checkAuthenticated, (req, res) => {
+    if (!!!req.userId)
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+
+    Auth.findById(req.userId, (err, auth)  => {
+        if (err)
+            return res.status(500).send(variables.errorMsg.serverError);
+        SiteContacts.find({ siteID: auth.siteID }, '-__v -siteID ', (err, results) => {
+            if (err)
+                return res.status(500).send(variables.errorMsg.serverError);
+            if (!!!results || results.length == 0)
+                return res.json(variables.errorMsg.notfound);
+            return res.status(200).send(results[0]);
+        });
+    });
 });
 
 /////////////////////////////////////////////////
@@ -33,7 +51,7 @@ siteDataRouter.post('/getsitecontacts', func.getSiteID, (req, res) => {
 
 //TODO: Add additional fields check as required fields for v2
 siteDataRouter.post('/addOrEditSiteContacts', func.checkAuthenticated, (req, res) => {
-    let siteConts = req.body
+    let siteConts = req.body;
     if (!!!siteConts || !!!req.siteID || !!!req.userId)
         return res.status(400).send(variables.errorMsg.invalidData); // Changed
 
@@ -65,7 +83,7 @@ siteDataRouter.post('/addOrEditSiteContacts', func.checkAuthenticated, (req, res
 /////////////////////////////////////////////////
 
 siteDataRouter.post('/removeSiteContacts', func.checkAuthenticated, (req, res) => {
-    let siteConts = req.body
+    let siteConts = req.body;
     if (!!!siteConts || !!!req.siteID || !!!req.userId || !!!req.levelAuth)
         return res.status(400).send(variables.errorMsg.invalidData); // Changed
 

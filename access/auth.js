@@ -65,6 +65,18 @@ authRouter.post('/checkForUser', (req, res) => {
     }
 });
 
+authRouter.get('/getAuth', func.checkAuthenticated, (req, res) => {
+    if (!!req.userId && !!req.siteID && !!req.authLevel) {
+        Auth.findById(req.userId, (err, rest) => {
+            if (err)
+                return res.status(400).send(variables.errorMsg.notfound); // Changed
+            res.status(200).send(rest);
+        });
+    } else {
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    }
+});
+
 /////////////////////////////////////////////////
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////
@@ -127,6 +139,42 @@ authRouter.post('/register', async (req, res) => {
         } else {
             return res.json(variables.errorMsg.exists); // Changed
         }
+    } else {
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    }
+});
+
+authRouter.post('/editAuth', func.checkAuthenticated, async (req, res) => {
+    let userData = req.body;
+    let tmpEmail;
+
+    // TODO: This may need to be changed // Check by both emails and user id than update?
+    if (!!req.userId && !!userData && !!req.authLevel && !!userData.email) {
+        let isExist;
+            if(!!userData.newEmail && userData.newEmail != '') {
+                tmpEmail = userData.email;
+                userData.email = userData.newEmail;
+                isExist = await Auth.findOne({ email: userData.newEmail }, (err, results) => {
+                    if (err) 
+                        return res.status(400).send(variables.errorMsg.notfound); // Change
+                    if (results !== null || results._id !== req.userId)
+                        return res.status(200).json('This email is already taken!');
+                });
+            } else 
+                tmpEmail = userData.email;
+            // console.log(userData)
+            // console.log({ _id: req.userId, email: userData.email })
+            Auth.findOneAndUpdate({ _id: req.userId, email: userData.email }, userData, (err, doc, response) => {
+                console.log(err, doc, response)
+                if (err) return res.status(401).json('The old email is not recognized.')// err) // TODO: 
+                if (doc) Customer.findOneAndUpdate({ email: userData.email }, userData, (err, doc, response) => {
+                    console.log(err, doc, response)
+                    if (err) return res.status(401).json('This is a second error') // err) // TODO: 
+                    if (doc) return res.json(variables.successMsg.update);
+                    else return res.status(401).json('The old email is not recognized.')
+                });
+                else return res.status(401).json('The old email is not recognized.')
+            });
     } else {
         return res.status(400).send(variables.errorMsg.invalidData); // Changed
     }

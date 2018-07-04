@@ -18,7 +18,7 @@ invoiceDataRouter.get('/cusInvoiceDetails', func.checkAuthenticated, (req, res) 
             if (results.length == 0) {
                 return res.json({ message: 'Data was not found!' })
             }
-            res.status(200).send(results);
+            res.status(200).send(results[0]);
         });
     } else {
         return res.status(500).send('Customer Invoice Details -> ' + variables.errorMsg.serverError);
@@ -68,8 +68,9 @@ invoiceDataRouter.post('/addOrEditCusInvoiceDetails', func.checkAuthenticated, (
 // Personal deletion
 // This can be done personaly
 invoiceDataRouter.post('/removeCusInvoiceDetails', func.checkAuthenticated, async (req, res) => {
-    InvoiceCustomerData.remove({ siteID: req.siteID, customerID: req.userId }, err => 
-        res.json({message: 'Invoice Data was successfully deleted!'}));
+    InvoiceCustomerData.remove({ siteID: req.siteID, customerID: req.userId }, 
+        (err) => res.json({message: 'Invoice Data was successfully deleted!'})
+    )
 });
 
 module.exports = invoiceDataRouter;

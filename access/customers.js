@@ -48,7 +48,7 @@ customerRouter.post('/login', async (req, res) => {
             func.createToken(res, customer, siteData); //TODO: Send and the FName / LName for v2
         });
     } else
-        return res.status(400).send(variables.errorMsg.invalidData) // Changed
+        return res.status(400).send(variables.errorMsg.invalidData); // Changed
 });
 
 //Required data for this call -> { "email": "mail@mail.com" }
@@ -93,9 +93,43 @@ customerRouter.get('/getAuthCustomer', func.checkAuthenticated, async (req, res)
     }
 });
 
+customerRouter.get('/getEmployees', func.checkAuthenticated, async (req, res) => {
+    if (
+        (!!req.siteID || !!req.userId || !!req.authLevel) && 
+        (req.authLevel && req.authLevel == 'AD' )
+    ) {
+    let auth = await Auth.findOne({ siteID: req.siteID, _id: req.userId})
+        if (auth !== null)
+        await Customers.find({siteID: req.siteID}, '-__v -password -siteID -created -GDPR -company', (err, result) => {
+            if(err)
+                return res.status(400).send(variables.errorMsg.invalidData);
+            else {
+                return res.status(200).send(result.filter( user => {
+                    return user.levelAuth == 'EE' || user.levelAuth == 'MN';
+                }));
+            }
+        })
+    }
+});
+
 /////////////////////////////////////////////////
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////
+// Update Employee only from Site Admin
+customerRouter.post('/updateEmployee', func.checkAuthenticated, async (req, res) => {
+    let data = req.body;
+    if (
+        (!!req.siteID || !!req.userId || !!req.authLevel) && 
+        (req.authLevel && req.authLevel == 'AD' )
+    ) {
+        let auth = await Auth.findOne({ siteID: req.siteID, _id: req.userId})
+        if (auth !== null) {
+            Customers.findOneAndUpdate({ _id: data._id, siteID: req.siteID }, data, (err, result) => { console.log(err, result)});
+            return res.status(200).send(variables.successMsg.update);
+        } else 
+            return res.status(401).send(variables.errorMsg.unauthorized)
+    }
+});
 // As minimum required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/register', func.getSiteID, async (req, res) => {
     let data = req.body;
@@ -114,6 +148,7 @@ customerRouter.post('/register', func.getSiteID, async (req, res) => {
                 data.type = 'user';
                 data.levelAuth = 'CU';
             }
+            data.personalDiscount = 0; // Zero by default
             data.siteID = req.siteID;
             data.lastLogin = data.created = func.currentDate();
             // Get Site Data

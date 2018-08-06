@@ -1,5 +1,6 @@
 let Products = require('../models/store/Products');
 let Customer = require('../models/Customers');
+let SiteLogs = require('../models/SiteLogs');
 let express = require('express');
 let productRouter = express.Router();
 let func = require('../func');
@@ -23,6 +24,7 @@ productRouter.post('/products', func.checkAuthenticated, (req, res) => {
             if (err) {
                 return res.json(variables.errorMsg.notfound);
             }
+           
             return res.send(response);
         });
     } else {
@@ -47,12 +49,25 @@ productRouter.post('/createproduct', func.checkAuthenticated, (req, res) => { //
             return res.status(200);
         });
     } else {
+        if (productData.categoryID == '') 
+            productData.categoryID = null;
         productData.siteID = req.siteID;
+        if (!!!req.quantity) productData.quantity = 0;
         let newProduct = new Products(productData);
         newProduct.save((err, newProd) => {
             if (err) {
                 return res.status(500).send(variables.errorMsg.serverError);
             }
+             // Save Log
+             const tmpLog = {
+                message: `Product '${productData.name}' was added!`,
+                type: 'product',
+                logDateTime: productData.date, // func.currentDate(),
+                siteID: req.siteID,
+                level: 'information'
+            }
+            const log = new SiteLogs(tmpLog);
+            log.save();
             return res.status(200).send(variables.successMsg.created);
         });
     }

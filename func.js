@@ -1,3 +1,4 @@
+// let SiteLogs = require('./access/siteLogs');
 let jwt = require('jwt-simple');
 let bcrypt = require('bcrypt-nodejs');
 let express = require('express');
@@ -56,15 +57,27 @@ let func = {
         next();
     },
     currentDate() {
-        let today = new Date();
-        let dd = today.getDate();
-        let mm = today.getMonth() + 1; //January is 0!
-        let yyyy = today.getFullYear();
+        // let today = new Date();
+        // let dd = today.getDate();
+        // let mm = today.getMonth() + 1; //January is 0!
+        // let yyyy = today.getFullYear();
 
-        if (dd < 10) dd = '0' + dd
-        if (mm < 10) mm = '0' + mm
-        return mm + '/' + dd + '/' + yyyy;
-    }
+        // if (dd < 10) dd = '0' + dd
+        // if (mm < 10) mm = '0' + mm
+        // return mm + '/' + dd + '/' + yyyy;
+        return new Date();
+    },
+    // addLog(siteID, level, message) {
+    //     let tmpLog = {
+    //         siteID,
+    //         level,
+    //         message,
+    //         logDateTime: this.currentDate(),
+    //     }
+    //     const log = new SiteLogs(tmpLog);
+    //     log.save( (err, result) => { });
+    //     return true;
+    // }
 }
 
 module.exports = func;

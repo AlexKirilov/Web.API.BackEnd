@@ -21,3 +21,6 @@
 ////// invalid ->
 // Token 2 eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1YWZmMTA4YzFlMThjZjM5MjhjZjAyMTYiLCJ0eXBlIjoiU3lzQWRtaW4ifQ.weCAj-RzCXjKJishaSoxwYFlK8sBIxoRn6FvSKtNvdw
 
+// Logs page for all error records type and separeted by customer filter
+
+// Server Side paging for Products, Logs ..... ?

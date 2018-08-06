@@ -13,6 +13,7 @@ var customerSchema = new mongoose.Schema({
     GDPR: Boolean,
     created: Date,
     lastLogin: Date,
+    personalDiscount: Number,
 });
 
 customerSchema.pre('save', function (next) {

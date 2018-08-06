@@ -5,6 +5,7 @@ let mongoose = require('mongoose');
 let jwt = require('jwt-simple');
 
 let auth = require('./access/auth');
+let siteLogs = require('./access/siteLogs');
 let siteType = require('./access/siteType');
 let siteData = require('./access/siteData');
 let comments = require('./access/comments');
@@ -22,6 +23,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/auth', auth);
+app.use('/logs', siteLogs);
 app.use('/sitetype', siteType);
 app.use('/category', category);
 app.use('/invoices', Invoices);

@@ -1,29 +1,52 @@
-var SiteType = require('../models/SiteType');
-var variables = require('../var');
-var express = require('express');
-var siteTypeRouter = express.Router();
-var func = require('../func');
+const { check, validationResult } = require('express-validator/check');
+const { sanitizeBody } = require('express-validator/filter');
+const SiteLogs = require('../models/SiteLogs');
+const SiteType = require('../models/SiteType');
+const variables = require('../var');
+const express = require('express');
+const siteTypeRouter = express.Router();
+const func = require('../func');
 
+function logMSG(data) {
+    new SiteLogs(data).save();
+}
 
 /////////////////////////////////////////////////
 ///////////////////    GET    ///////////////////
 /////////////////////////////////////////////////
-siteTypeRouter.get('/getsitetypes', async (req, res) => {
-    var types = await SiteType.find({}, '-__v');
-    res.send(types)
+siteTypeRouter.get('/getsitetypes', (req, res) => {
+    SiteType.find({}, '-__v').exec()
+        .then(types => { res.status(200).send(types); });
 });
 
 //Requires { name : 'name' }
 siteTypeRouter.post('/checkForExistingWebType', async (req, res) => {
-    var typeData = req.body;
-    typeData.name = typeData.name.toLowerCase();
-    if (typeData && typeData.name.trim() != '') {
-        SiteType.findOne({ name: typeData.name }, (err, result) => {
-            if (err) return res.status(500).send(variables.errorMsg.serverError);
-            return res.status(200).send({ exist: (result !== null) });
-        });
-    } else
-        res.status(200).send({ exist: false });
+    check('name').not().isEmpty().isString();
+    sanitizeBody('notifyOnReply').toBoolean()
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    } else {
+        let typeData = req.body;
+        typeData.name = typeData.name.toLowerCase();
+        if (typeData && typeData.name.trim() != '') {
+            SiteType.findOne({ name: typeData.name }).exec()
+                .then(result => {
+                    res.status(200).send({ exist: (result && result.length > 0) });
+                }).catch(err => {
+                    // Add new Log
+                    logMSG({
+                        level: 'error',
+                        message: func.onCatchCreateLogMSG(err),
+                        sysOperation: 'check',
+                        sysLevel: 'webtype'
+                    });
+                    res.status(500).json({ error: err });
+                });
+        } else
+            res.status(200).send({ exist: false });
+    }
 });
 
 /////////////////////////////////////////////////
@@ -31,24 +54,35 @@ siteTypeRouter.post('/checkForExistingWebType', async (req, res) => {
 /////////////////////////////////////////////////
 // Required fields { name } and to be SYS Admin
 siteTypeRouter.post('/createsitetype', func.checkAuthenticated, (req, res) => {
-    let typeData = req.body;
-    if (!!!typeData.name)
-        return res.status(400).send(variables.errorMsg.invalidData); // Changed
+    check('name').trim().not().isEmpty().isString();
+    sanitizeBody('notifyOnReply').toBoolean()
 
-    typeData.name = typeData.name.toLowerCase();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    } else {
+        let typeData = req.body;
+        typeData.name = typeData.name.toLowerCase();
 
-    SiteType.findOne({ name: typeData.name }, (err, result) => {
-        if (err) return res.status(500).send(variables.errorMsg.serverError);
-        if (!!typeData && typeData.name.trim() != '' && (result === null)) {
-            let newType = new SiteType(typeData);
-            newType.save((err, resData) => {
-                if (err)
-                    return res.status(500).send(variables.errorMsg.created); // Changed
-                return res.json(variables.successMsg.created);
+        SiteType.findOne({ name: typeData.name }).exec()
+            .then(result => {
+                if (result === null) {
+                    new SiteType(typeData).save()
+                        .then(() => {
+                            logMSG({
+                                level: 'information',
+                                message: `New site type with name '${typeData.name}' was created successfully`,
+                                sysOperation: 'create',
+                                sysLevel: 'sitetype'
+                            });
+                            res.json(variables.successMsg.created);
+                        })
+                } else
+                    return res.json({ message: 'This Type name already exists!' });
+            }).catch(err => {
+                res.status(500).json({ error: err });
             });
-        } else
-            return res.json({ message: 'This Type name already exists!' });
-    });
+    }
 });
 
 //DELETE OR EDIT ONLY from DB

@@ -2,17 +2,17 @@ var mongoose = require('mongoose');
 
 var SiteContactsSchema = new mongoose.Schema({
     siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
-    phones: Array,
+    phones: { type: Array, default: [] },
     connections: {
-        facebook: String,
-        twitter: String,
-        linkedin: String,
-        skype: String
+        facebook: { type: String, default: '' },
+        twitter: { type: String, default: '' },
+        linkedin: { type: String, default: '' },
+        skype: { type: String, default: '' }
     },
     coordinates: {
-        latitude: Number,
-        longitude: Number,
-        url: String
+        latitude: { type: Number, default: 0 },
+        longitude: { type: Number, default: 0 },
+        url: { type: String, default: '' }
     }
 });
 

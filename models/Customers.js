@@ -3,17 +3,17 @@ var bcrypt = require('bcrypt-nodejs');
 
 var customerSchema = new mongoose.Schema({
     siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
-    email: String,
-    password: String,
-    firstname: String,
-    lastname: String,
-    company: String,
-    levelAuth: String, // Level only to auth 
-    type: String, // Level only for users
-    GDPR: Boolean,
-    created: Date,
-    lastLogin: Date,
-    personalDiscount: Number,
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    firstname: { type: String, default: '' },
+    lastname: { type: String, default: '' },
+    company: { type: String, default: '' },
+    levelAuth: { type: String, default: '' }, /* Level of Auth // SA -> SysAdmin // AD -> Admin // MN -> Manager // EE -> Employee // CU -> Customer // GU -> Guest */
+    type: { type: String, default: '' }, // Level only for users
+    GDPR: { type: Boolean, default: false },
+    created: { type: Date, default: new Date ().toISOString() },
+    lastLogin: { type: Date, default: new Date ().toISOString() },
+    personalDiscount: { type: Number, default: 0 },
 });
 
 customerSchema.pre('save', function (next) {

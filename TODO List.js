@@ -24,3 +24,10 @@
 // Logs page for all error records type and separeted by customer filter
 
 // Server Side paging for Products, Logs ..... ?
+
+
+/*
+Serversite {                                     1 ASC : -1 Des
+    .find( {}, {"FirstName" : 1, "_id": 0}  ) .sort( {"FirstName" : 1}).skip( number ).limit ( number )
+}
+*/

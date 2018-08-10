@@ -1,21 +1,20 @@
-let express = require('express');
-let cors = require('cors');
-let bodyParser = require('body-parser');
-let mongoose = require('mongoose');
-let jwt = require('jwt-simple');
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const jwt = require('jwt-simple');
 
-let auth = require('./access/auth');
-let siteLogs = require('./access/siteLogs');
-let siteType = require('./access/siteType');
-let siteData = require('./access/siteData');
-let comments = require('./access/comments');
-let customers = require('./access/customers');
-let Invoices = require('./accessData/Invoice');
-let category = require('./accessData/category');
-let storeProducts = require('./accessData/product');
-let InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
-
-let app = express();
+const auth = require('./access/auth');
+const siteLogs = require('./access/siteLogs');
+const siteType = require('./access/siteType');
+const siteData = require('./access/siteData');
+const comments = require('./access/comments');
+const customers = require('./access/customers');
+const Invoices = require('./accessData/Invoice');
+const category = require('./accessData/category');
+const storeProducts = require('./accessData/product');
+const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
+const app = express();
 
 mongoose.Promise = Promise;
 

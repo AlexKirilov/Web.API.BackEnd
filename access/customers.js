@@ -34,7 +34,7 @@ customerRouter.post('/login', [
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
+        return res.status(404).send(variables.errorMsg.notfound);
     } else {
         const loginData = req.body;
 
@@ -44,7 +44,6 @@ customerRouter.post('/login', [
 
         //Getting Site Data
         const siteData = await Site.findOne({ _id: customer.siteID }, '-__v -name');
-
         //Creating the token and the auth data
         bcrypt.compare(loginData.password, customer.password, (err, isMatch) => {
             if (!isMatch) {
@@ -243,15 +242,19 @@ customerRouter.post('/register', func.getSiteID, async (req, res) => {
     // TODO: func.validateEmail(data.email);
     check('siteID').not().isEmpty().isString();
     sanitizeBody('notifyOnReply').toBoolean();
+    console.log(req.body)
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.array() });
     } else {
         const data = req.body;
+        console.log(data)
         // Check for existing email
         Customers.findOne({ email: data.email }).exec()
             .then(customer => {
+        console.log(customer)
+
                 if (customer === null || customer.length === 0) {
                     //Set Optional fields to default values or null
                     if (!!!data.type || data.type == '') {

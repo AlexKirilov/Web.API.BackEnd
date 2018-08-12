@@ -1,6 +1,6 @@
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-let productsSchema = new mongoose.Schema({
+const productsSchema = new mongoose.Schema({
     siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
     // customerID: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'}, // For APP v 2
     categoryID: { type: mongoose.Schema.Types.ObjectId, ref: 'Category'},

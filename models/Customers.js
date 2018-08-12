@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 
 var customerSchema = new mongoose.Schema({
-    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
+    siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site', required: true},
     email: { type: String, required: true },
     password: { type: String, required: true },
     firstname: { type: String, default: '' },

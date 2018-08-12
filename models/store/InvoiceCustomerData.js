@@ -1,7 +1,7 @@
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 //Fakturi
 
-var cuInvoiceDetailsSchema = new mongoose.Schema({
+const cuInvoiceDetailsSchema = new mongoose.Schema({
     siteID: { type: mongoose.Schema.Types.ObjectId, ref: 'Site'},
     customerID: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer'},
     address: { type: String, default: '' },

@@ -10,6 +10,7 @@ const siteType = require('./access/siteType');
 const siteData = require('./access/siteData');
 const comments = require('./access/comments');
 const customers = require('./access/customers');
+const gallery  = require('./accessData/gallery');
 const Invoices = require('./accessData/Invoice');
 const category = require('./accessData/category');
 const storeProducts = require('./accessData/product');
@@ -23,12 +24,13 @@ app.use(bodyParser.json());
 
 app.use('/auth', auth);
 app.use('/logs', siteLogs);
+app.use('/gallery', gallery);
 app.use('/sitetype', siteType);
 app.use('/category', category);
 app.use('/invoices', Invoices);
 app.use('/comments', comments);
-app.use('/customers', customers);
 app.use('/sitedata', siteData);
+app.use('/customers', customers);
 app.use('/invoicecustomersdata', InvoiceCustomerDataFunc);
 
 app.use('/store', storeProducts);

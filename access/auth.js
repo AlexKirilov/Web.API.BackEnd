@@ -90,7 +90,7 @@ authRouter.post('/login', [
                                         });
                                         logMSG({
                                             level: 'information',
-                                            message: `User with ID '${user.id}' logged in successfully`,
+                                            message: `User with ID '${auth.id}' logged in successfully`,
                                             sysOperation: 'login',
                                             sysLevel: 'auth'
                                         });

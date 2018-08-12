@@ -26,7 +26,8 @@ const func = {
         let SiteData = `${user.levelAuth} ${site.publicKey}`;
         let WebSite = `ID ${site._id}`
         let token = jwt.encode(payload, encrKey);
-        return res.status(200).send({ token, SiteData, WebSite });
+        let username = (user.lastname == '') ? user.firstname : user.lastname;
+        return res.status(200).send({ token, SiteData, WebSite, username });
     },
     checkAuthenticated: (req, res, next) => {
         if (!req.header('Authorization'))

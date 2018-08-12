@@ -99,7 +99,7 @@ siteLogsRouter.get('/getLogs', async (req, res) => {
                         results: results
                     }
                     res.status(200).send(responce);
-                })
+                });
             })
             .catch(err => { res.status(500).json({ error: err }); });
     }

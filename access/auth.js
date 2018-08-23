@@ -294,7 +294,7 @@ authRouter.post('/editAuth', func.checkAuthenticated, async (req, res) => {
                 const isNewCustExist = await Customer.find({ email: userData.newEmail });
 
                 if (isNewAuthExist.length > 0 || isNewCustExist.length > 0) {
-                    return res.status(404).json({ message: 'Provided new email address is already taken!.' });
+                    return res.status(404).json({ message: 'Provided new email address is already taken!' });
                 } else {
                     userData.email = userData.newEmail;
                 }
@@ -311,7 +311,7 @@ authRouter.post('/editAuth', func.checkAuthenticated, async (req, res) => {
                                 customerID: req.userId,
                                 type: 'customer',
                                 level: 'information',
-                                message: variables.successMsg.update,
+                                message: variables.successMsg.update.message,
                                 sysOperation: 'update',
                                 sysLevel: 'auth'
                             });
@@ -349,94 +349,6 @@ authRouter.post('/editAuth', func.checkAuthenticated, async (req, res) => {
     }
 });
 
-authRouter.post('/changeauthlevel', func.checkAuthenticated, (req, res) => {
-    check('siteID').not().isEmpty();
-    check('userId').not().isEmpty();
-    check('levelAuth').not().isEmpty().isString().isLength({ min: 2, max: 3 });
-    check('customerID').not().isEmpty().isString();
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    } else {
-        const userData = req.body;
-        Auth.findById(req.userId)
-            .exec()
-            .then(rest => {
-                if (!rest) {
-                    res.status(404).json(variables.errorMsg.notfound);
-                } else if (rest.levelAuth !== 'AD' && rest.levelAuth !== 'SA') {
-                    return res.status(401).send(variables.errorMsg.unauthorized); // Changed
-                } else {
-                    Customer.findById(userData.customerID)
-                        .exec()
-                        .then(result => {
-                            if (result) {
-                                result.levelAuth = userData.levelAuth;
-                                switch (userData.levelAuth) {
-                                    case 'AD': result.type = 'Admin'; break;
-                                    case 'MN': result.type = 'Manager'; break;
-                                    case 'EE': result.type = 'Employee'; break;
-                                    case 'CU': result.type = 'Customer'; break;
-                                }
-                                Customer.findByIdAndUpdate(userData.customerID, result)
-                                    .exec()
-                                    .then(() => {
-                                        logMSG({
-                                            siteID: req.siteID,
-                                            customerID: req.userId,
-                                            type: 'customer',
-                                            level: 'information',
-                                            message: variables.successMsg.update,
-                                            sysOperation: 'update',
-                                            sysLevel: 'authlevel'
-                                        });
-                                        res.status(200).send(variables.successMsg.update); // Changed
-                                    })
-                                    .catch(err => {
-                                        logMSG({
-                                            siteID: req.siteID,
-                                            customerID: req.userId,
-                                            type: 'customer',
-                                            level: 'error',
-                                            message: func.onCatchCreateLogMSG(err),
-                                            sysOperation: 'update',
-                                            sysLevel: 'authlevel'
-                                        });
-                                        res.status(500).json({ error: err });
-                                    });
-                            } else {
-                                res.status(404).json(variables.errorMsg.notfound);
-                            }
-                        })
-                        .catch(err => {
-                            logMSG({
-                                siteID: req.siteID,
-                                customerID: req.userId,
-                                type: 'auth',
-                                level: 'error',
-                                message: func.onCatchCreateLogMSG(err),
-                                sysOperation: 'update',
-                                sysLevel: 'authlevel'
-                            });
-                            res.status(500).json({ error: err });
-                        });
-                }
-            })
-            .catch(err => {
-                logMSG({
-                    siteID: req.siteID,
-                    customerID: req.userId,
-                    type: 'auth',
-                    level: 'error',
-                    message: func.onCatchCreateLogMSG(err),
-                    sysOperation: 'update',
-                    sysLevel: 'authlevel'
-                });
-                res.status(500).json({ error: err });
-            });
-    }
-});
 
 /////////////////////////////////////////////////
 ////////////////    DELETE    ///////////////////

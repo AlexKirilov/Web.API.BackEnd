@@ -95,166 +95,50 @@ customerRouter.post('/checkForUser', (req, res) => {
 });
 
 //Required data for this call -> { "email": "mail@mail.com" }
-customerRouter.get('/getCustomer', func.checkAuthenticated, (req, res) => {
+customerRouter.get('/getCustomer', func.checkAuthenticated, async (req, res) => {
     check('userId').not().isEmpty().isString();
     check('siteID').not().isEmpty().isString();
     check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
     sanitizeBody('notifyOnReply').toBoolean();
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.array() });
     } else {
-        Customers.findOne({ siteID: req.siteID, _id: req.userId })
-            .exec()
-            .then(result => { if (customer !== null) res.status(200).send(result); })
-            .catch(err => {
-                // Add new Log
-                logMSG({
-                    siteID: req.siteID,
-                    customerID: req.userId,
-                    level: 'error',
-                    message: func.onCatchCreateLogMSG(err),
-                    sysOperation: 'get',
-                    sysLevel: 'customer'
-                });
-                res.status(500).json({ error: err });
+        const customer = await Customers.findById(req.userId, '-__v -GDPR -created -password -lastLogin -levelAuth -siteID').catch(err => {
+            // Add new Log
+            logMSG({
+                siteID: req.siteID,
+                customerID: req.userId,
+                level: 'error',
+                message: func.onCatchCreateLogMSG(err),
+                sysOperation: 'get',
+                sysLevel: 'customer'
             });
-    }
-});
-
-//Required data for this call -> { "email": "mail@mail.com" }
-customerRouter.get('/getAuthCustomer', func.checkAuthenticated, (req, res) => {
-    check('userId').not().isEmpty().isString();
-    check('siteID').not().isEmpty().isString();
-    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
-    sanitizeBody('notifyOnReply').toBoolean();
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    } else {
-        Auth.findOne({ siteID: req.siteID, _id: req.userId }).exec()
-            .then(auth => {
-                if (auth !== null) {
-                    Customers.findOne({ siteID: req.siteID, email: auth.email }).exec()
-                        .then(customer => {
-                            if (customer !== null) { res.status(200).send(customer); }
-                            else { res.status(404).send(variables.errorMsg.notfound); }
-                        })
-                } else {
-                    res.status(404).send(variables.errorMsg.notfound);
-                }
-            })
-            .catch(err => {
-                logMSG({
-                    siteID: req.siteID,
-                    customerID: req.userId,
-                    level: 'error',
-                    message: func.onCatchCreateLogMSG(err),
-                    sysOperation: 'get',
-                    sysLevel: 'customer'
-                });
-                res.status(500).json({ error: err });
-            });
-    }
-});
-
-customerRouter.get('/getEmployees', func.checkAuthenticated, (req, res) => {
-    check('userId').not().isEmpty().isString();
-    check('siteID').not().isEmpty().isString();
-    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 }).equals('AD'); // .withMessage('AD')
-    sanitizeBody('notifyOnReply').toBoolean();
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    } else {
-        Auth.findOne({ siteID: req.siteID, _id: req.userId }).exec()
-            .then(auth => {
-                if (auth !== null) {
-                    Customers.find({ siteID: req.siteID }, '-__v -password -siteID -created -GDPR -company').exec()
-                        .then(result => {
-                            res.status(200).send(result.filter(user => {
-                                return user.levelAuth == 'EE' || user.levelAuth == 'MN';
-                            }));
-                        });
-                }
-            }).catch(err => {
-                // Add new Log
-                logMSG({
-                    siteID: req.siteID,
-                    customerID: req.userId,
-                    level: 'error',
-                    message: func.onCatchCreateLogMSG(err),
-                    sysOperation: 'get',
-                    sysLevel: 'employee'
-                });
-                res.status(500).json({ error: err });
-            });
-
+            res.status(500).json({ error: err });
+        });
+        res.status(200).send(customer);    
     }
 });
 
 /////////////////////////////////////////////////
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////
-// Update Employee only from Site Admin
-customerRouter.post('/updateEmployee', func.checkAuthenticated, (req, res) => {
-    check('userId').not().isEmpty().isString();
-    check('siteID').not().isEmpty().isString();
-    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 }).equals('AD'); // .withMessage('AD')
-    sanitizeBody('notifyOnReply').toBoolean();
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    } else {
-        const data = req.body;
-        Auth.findOne({ siteID: req.siteID, _id: req.userId }).exec()
-            .then(auth => {
-                if (auth !== null) {
-                    Customers.findOneAndUpdate({ _id: data._id, siteID: req.siteID }, data)
-                        .then(() => {
-                            res.status(200).send(variables.successMsg.update);
-                        });
-                } else {
-                    return res.status(404).send(variables.errorMsg.notfound)
-                }
-            }).catch(err => {
-                logMSG({
-                    siteID: req.siteID,
-                    customerID: req.userId,
-                    level: 'error',
-                    message: func.onCatchCreateLogMSG(err),
-                    sysOperation: 'update',
-                    sysLevel: 'employee'
-                });
-                res.status(500).json({ error: err });
-            });
-    }
-});
 
 // As minimum required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/register', func.getSiteID, async (req, res) => {
     check('email').isEmail().normalizeEmail();
     check('password').isString().trim().isLength({ min: 5 }).escape();
-    // TODO: func.validateEmail(data.email);
     check('siteID').not().isEmpty().isString();
     sanitizeBody('notifyOnReply').toBoolean();
-    console.log(req.body)
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.array() });
     } else {
         const data = req.body;
-        console.log(data)
         // Check for existing email
         Customers.findOne({ email: data.email }).exec()
             .then(customer => {
-        console.log(customer)
-
                 if (customer === null || customer.length === 0) {
                     //Set Optional fields to default values or null
                     if (!!!data.type || data.type == '') {
@@ -298,8 +182,7 @@ customerRouter.post('/register', func.getSiteID, async (req, res) => {
 // As minimum required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/editcustomer', [
     check('email').isEmail().normalizeEmail(),
-    check('password').isString().trim().isLength({ min: 5 }).escape(),
-], func.checkAuthenticated, (req, res) => {
+], func.checkAuthenticated, async (req, res) => {
     // TODO: func.validateEmail(data.email);
     sanitizeBody('notifyOnReply').toBoolean();
 
@@ -307,7 +190,20 @@ customerRouter.post('/editcustomer', [
     if (!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.array() });
     } else {
-        Customers.findByIdAndUpdate(req.userId, req.body)
+        const editCu = req.body;
+        const checkCurrentCu = await Customers.find({email: editCu.email, siteID: req.siteID});
+        if (!checkCurrentCu || checkCurrentCu.length === 0) {
+            return res.status(200).send({ message: 'Provided email address is invalid!' });
+        }
+        if (editCu.newEmail && editCu.newEmail !== void 0 && editCu.newEmail !== '') {
+            const checkForCu = await Customers.find({email: editCu.newEmail});
+            if(checkForCu && checkForCu.length > 0) {
+                return res.status(200).send({ message: 'Provided new email address is already taken!' });
+            } else {
+                editCu.email = editCu.newEmail;
+            }
+        }
+        Customers.findByIdAndUpdate(req.userId, editCu)
             .then((result) => {
                 if (result.length > 0) { res.status(200).send(result); }
                 else { res.status(400).send(variables.errorMsg.notfound); }

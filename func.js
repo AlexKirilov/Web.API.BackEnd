@@ -1,4 +1,4 @@
-const SiteLogs = require('./access/siteLogs');
+const SiteLogs = require('./access/siteLogs').default;
 const jwt = require('jwt-simple');
 const bcrypt = require('bcrypt-nodejs');
 const express = require('express');
@@ -29,6 +29,22 @@ const func = {
         let username = (user.lastname == '') ? user.firstname : user.lastname;
         return res.status(200).send({ token, SiteData, WebSite, username });
     },
+    auto: (req, res) => {
+        if (!req.header('Authorization'))
+            return false;
+        let token = req.header('Authorization').split(' ')[1]; // [0] removing the 'token' string
+        let siteData = req.header('SiteData').split(' '); // [0] LevelOfAuth + [1] Public Key
+        let siteID = req.header('WebSite').split(' ')[1]; // [0] removing the 'ID' string
+        let levelOfAuth = siteData[0]; //SA, AD, MN, CU
+        let publicKey = siteData[1];
+
+        let decryptKey = variables.masterKey + publicKey + levelOfAuth;
+        let payload = jwt.decode(token, decryptKey);
+        if (!payload)
+            return false;
+        return payload.sub;
+
+    },
     checkAuthenticated: (req, res, next) => {
         if (!req.header('Authorization'))
             return res.status(401).send(variables.errorMsg.unauthorized);
@@ -52,8 +68,10 @@ const func = {
         if (!req.header('WebSite'))
             return res.status(401).send(variables.errorMsg.unauthorized);
 
+        const userId = func.auto(req,res);
         let siteID = req.header('WebSite').split(' ')[1]; // [0] removing the 'ID' string
         req.siteID = siteID;
+        req.userId = userId;
         next();
     },
     currentDate() {

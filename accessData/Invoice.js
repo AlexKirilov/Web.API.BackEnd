@@ -70,7 +70,7 @@ InvoiceRouter.get('/invoices', func.checkAuthenticated, (req, res) => {
             Invoices.find(by).exec() // TODO: findon or find --> result should be aways only one per client / user
                 .then(data => {
                     if (data.length == 0) { res.status(200).send([]) }
-                    else if (req.userId == result.customerInvoiceID || req.authLevel == 'AD' || req.authLevel == 'MN') {
+                    else if (req.userId == data.customerInvoiceID || req.authLevel == 'AD' || req.authLevel == 'MN') {
                         res.status(200).send(data);
                     } else {
                         res.status(401).send(variables.errorMsg.unauthorized);

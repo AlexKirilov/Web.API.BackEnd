@@ -5,8 +5,11 @@ const mongoose = require('mongoose');
 const jwt = require('jwt-simple');
 
 const auth = require('./access/auth');
-const siteLogs = require('./access/siteLogs');
+const authCU = require('./access/authCU');
+// const siteLogs = require('./access/siteLogs');
+const logs = require('./access/logs');
 const siteType = require('./access/siteType');
+const orders = require('./accessData/orders');
 const siteData = require('./access/siteData');
 const comments = require('./access/comments');
 const customers = require('./access/customers');
@@ -22,8 +25,11 @@ mongoose.Promise = Promise;
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use('/logs', logs);
 app.use('/auth', auth);
-app.use('/logs', siteLogs);
+// app.use('/logs', siteLogs);
+app.use('/orders', orders);
+app.use('/authdata', authCU);
 app.use('/gallery', gallery);
 app.use('/sitetype', siteType);
 app.use('/category', category);

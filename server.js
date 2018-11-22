@@ -18,6 +18,7 @@ const Invoices = require('./accessData/Invoice');
 const category = require('./accessData/category');
 const storeProducts = require('./accessData/product');
 const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
+const DataToolsTMP = require('./access/DataToolsTmp');
 const app = express();
 
 mongoose.Promise = Promise;
@@ -38,7 +39,7 @@ app.use('/comments', comments);
 app.use('/sitedata', siteData);
 app.use('/customers', customers);
 app.use('/invoicecustomersdata', InvoiceCustomerDataFunc);
-
+app.use('/datatoolsWS', DataToolsTMP);
 app.use('/store', storeProducts);
 
 mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', (err) => {

@@ -13,36 +13,6 @@ function logMSG(data) {
   new SiteLogs(data).save();
 }
 
-/*
-    const { check, validationResult } = require('express-validator/check');
-    const { sanitizeBody } = require('express-validator/filter');
-    const SiteLogs = require('../models/SiteLogs');
-
-    check('email').isString().isEmail().normalizeEmail();
-    check('password').isString().trim().isLength({ min: 5 }).escape();
-    check('userId').not().isEmpty().isString();
-    check('siteID').not().isEmpty().isString();
-    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
-    sanitizeBody('notifyOnReply').toBoolean()
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    } else {
-
-    .catch(err => {
-                // Add new Log
-                logMSG({
-                            siteID: req.siteID,
-                            customerID: req.userId,
-                            level: 'error',
-                            message: func.onCatchCreateLogMSG(err),
-                            sysOperation: 'update',
-                            sysLevel: 'invoices'
-                        });
-                res.status(500).json({ error: err });
-            })
-   */
 function convertSort(sortColumn) {
   if (typeof sortColumn !== "object") {
     let sort = {};
@@ -69,13 +39,10 @@ function convertSort(sortColumn) {
 /////////////////////////////////////////////
 //categoryID
 productRouter.post("/products", func.getSiteID, async (req, res) => {
-  // func.checkAuthenticated
-  // check('userId').not().isEmpty().isString();
   check("siteID")
     .not()
     .isEmpty()
     .isString();
-  // check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
   sanitizeBody("notifyOnReply").toBoolean();
 
   const errors = validationResult(req);
@@ -127,7 +94,6 @@ productRouter.post("/products", func.getSiteID, async (req, res) => {
       .catch(err => {
         logMSG({
           siteID: req.siteID,
-          // customerID: req.userId,
           level: "error",
           message: func.onCatchCreateLogMSG(err),
           sysOperation: "create",
@@ -163,6 +129,7 @@ productRouter.get("/geteditlevel", func.getSiteID, (req, res) => {
       });
   }
 });
+
 /////////////////////////////////////////////
 ////////////// POST /////////////////////////
 /////////////////////////////////////////////
@@ -171,7 +138,7 @@ productRouter.post(
   "/createproduct",
   func.checkAuthenticated,
   async (req, res) => {
-    // SPOTTODO Only if it`s Admin or Manager
+    // Only if it`s Admin or Manager
     check("userId")
       .not()
       .isEmpty()
@@ -264,7 +231,7 @@ productRouter.post(
 ////////////////    DELETE    ///////////////////
 /////////////////////////////////////////////////
 
-productRouter.post(
+productRouter.delete(
   "/removeproducts",
   func.checkAuthenticated,
   async (req, res) => {
@@ -324,73 +291,73 @@ productRouter.post(
     }
   }
 );
-// Dangerous function
-productRouter.post(
-  "/removeAllProductByCategory",
-  func.checkAuthenticated,
-  async (req, res) => {
-    check("userId")
-      .not()
-      .isEmpty()
-      .isString();
-    check("siteID")
-      .not()
-      .isEmpty()
-      .isString();
-    check("name")
-      .trim()
-      .not()
-      .isEmpty()
-      .isString();
-    check("authLevel")
-      .not()
-      .isEmpty()
-      .isString()
-      .isLength({ min: 2, max: 3 });
-    sanitizeBody("notifyOnReply").toBoolean();
+// // Dangerous function
+// productRouter.post(
+//   "/removeAllProductByCategory",
+//   func.checkAuthenticated,
+//   async (req, res) => {
+//     check("userId")
+//       .not()
+//       .isEmpty()
+//       .isString();
+//     check("siteID")
+//       .not()
+//       .isEmpty()
+//       .isString();
+//     check("name")
+//       .trim()
+//       .not()
+//       .isEmpty()
+//       .isString();
+//     check("authLevel")
+//       .not()
+//       .isEmpty()
+//       .isString()
+//       .isLength({ min: 2, max: 3 });
+//     sanitizeBody("notifyOnReply").toBoolean();
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    } else {
-      let data = req.body;
-      try {
-        let by = { siteID: req.siteID, categoryID: data.categoryID };
-        // This will delete all products connected with that category or subcategory
-        Products.remove(by).then(() => {
-          logMSG({
-            siteID: req.siteID,
-            customerID: req.userId,
-            level: "information",
-            message: `All product by category ID '${
-              data.categoryID
-            }' were removed successfully.`,
-            sysOperation: "delete",
-            sysLevel: "product"
-          });
-          res.status(201).send(variables.successMsg.remove);
-        });
-      } catch (err) {
-        return res.json(variables.errorMsg.notfound);
-      }
-    }
-  }
-);
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//       return res.status(422).json({ errors: errors.array() });
+//     } else {
+//       let data = req.body;
+//       try {
+//         let by = { siteID: req.siteID, categoryID: data.categoryID };
+//         // This will delete all products connected with that category or subcategory
+//         Products.remove(by).then(() => {
+//           logMSG({
+//             siteID: req.siteID,
+//             customerID: req.userId,
+//             level: "information",
+//             message: `All product by category ID '${
+//               data.categoryID
+//             }' were removed successfully.`,
+//             sysOperation: "delete",
+//             sysLevel: "product"
+//           });
+//           res.status(201).send(variables.successMsg.remove);
+//         });
+//       } catch (err) {
+//         return res.json(variables.errorMsg.notfound);
+//       }
+//     }
+//   }
+// );
 
-/*
-//TODO: for future development
-productRouter.post('/removeAllproductsByCustomer', func.checkAuthenticated, async (req, res) => {
-    try {
-        if (req.userId == void 0)
-            return res.status(400).send(variables.errorMsg.invalidData);
 
-        // This will delete all products connected with that customer
-        Products.remove({ customer: req.userId }).exec(
-            res.status(201).send(variables.successMsg.remove)
-        );
-    } catch (err) {
-        return res.json(variables.errorMsg.notfound);
-    }
-});
-*/
+// productRouter.post('/removeAllproductsByCustomer', func.checkAuthenticated, async (req, res) => {
+//     try {
+//         if (req.userId == void 0)
+//             return res.status(400).send(variables.errorMsg.invalidData);
+
+//         // This will delete all products connected with that customer / web site
+//         Products.remove({ customer: req.userId }).exec(
+//             res.status(201).send(variables.successMsg.remove)
+//         );
+//     } catch (err) {
+//         return res.json(variables.errorMsg.notfound);
+//     }
+// });
+
+
 module.exports = productRouter;

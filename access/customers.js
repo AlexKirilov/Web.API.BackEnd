@@ -205,8 +205,7 @@ customerRouter.post('/editcustomer', [
         }
         Customers.findByIdAndUpdate(req.userId, editCu)
             .then((result) => {
-                if (result.length > 0) { res.status(200).send(result); }
-                else { res.status(400).send(variables.errorMsg.notfound); }
+                    res.status(200); // .send(result);
             }).catch(err => {
                 logMSG({
                     siteID: req.siteID,

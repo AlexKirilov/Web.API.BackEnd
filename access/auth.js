@@ -160,7 +160,8 @@ authRouter.get('/getAuth', func.checkAuthenticated, (req, res) => {
             .exec()
             .then(rest => {
                 if (rest) { res.status(200).send(rest); }
-                else { res.status(404).send(variables.errorMsg.notfound); }
+                else { res.status(200).send([]); }
+                // else { res.status(404).send(variables.errorMsg.notfound); }
             })
             .catch(err => {
                 logMSG({

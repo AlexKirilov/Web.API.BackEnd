@@ -76,7 +76,7 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
     if (!!productData.categoryID) by.categoryID = productData.categoryID;
     if (!!req.userId) {
       const customer = await Customers.findById(req.userId);
-      customerDiscount = customer.personalDiscount;
+      customerDiscount = customer.personalDiscount ? customer.personalDiscount : 0;
     }
     Orders.find(by)
       .sort(sort)
@@ -84,22 +84,29 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
       .limit(perPage)
       .exec()
       .then(orders => {
-        Orders.count(by).then(count => {
-          let responce = {
-            rows: count,
-            pages: Math.ceil(count / perPage),
-            page: page,
-            perPage: perPage,
-            displayedRows: orders.length,
-            firstrowOnPage: page <= 1 ? 1 : (page - 1) * perPage + 1,
-            lastRowOnPage:
-              page * perPage - 1 > count ? count : page * perPage - 1,
-            sortBy: sort,
-            results: orders
-          };
+        if (orders) {
+          // var ids = [];
+          // orders.filter(order => ids.push(order.customerID));
+          // var obj_ids = ids.map(function(id) { return ObjectId(id); });
+          // const dddd = db.Customers.find({_id: {$in: obj_ids}});
+          // console.log('Customers n Orders', dddd)
+          Orders.count(by).then(count => {
+            let responce = {
+              rows: count,
+              pages: Math.ceil(count / perPage),
+              page: page,
+              perPage: perPage,
+              displayedRows: orders.length,
+              firstrowOnPage: page <= 1 ? 1 : (page - 1) * perPage + 1,
+              lastRowOnPage:
+                page * perPage - 1 > count ? count : page * perPage - 1,
+              sortBy: sort,
+              results: orders
+            };
 
-          res.status(200).send(responce);
-        });
+            res.status(200).send(responce);
+          });
+        }
       })
       .catch(err => {
         logMSG({
@@ -159,7 +166,7 @@ orderRouter.get(
       if (!!productData.categoryID) by.categoryID = productData.categoryID;
       if (!!req.userId) {
         const customer = await Customers.findById(req.userId);
-        customerDiscount = customer.personalDiscount;
+        customerDiscount = (customer && customer.personalDiscount) ? customer.personalDiscount : 0;
       }
       Orders.find(by)
         .sort(sort)

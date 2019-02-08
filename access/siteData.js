@@ -46,15 +46,20 @@ siteDataRouter.get('/getAuthSiteContacts', func.checkAuthenticated, (req, res) =
     check('userId').not().isEmpty().isString();
     sanitizeBody('notifyOnReply').toBoolean();
     const errors = validationResult(req);
+    // console.log('REQ', req)
     if (!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.array() });
     } else {
         Auth.findById(req.userId).exec()
             .then(auth => {
-                SiteContacts.find({ siteID: auth.siteID }, '-__v -siteID ').exec()
-                    .then(results => {
-                        (!!!results || results.length == 0) ? res.json(variables.errorMsg.notfound) : res.status(200).send(results[0]);
-                    });
+                if (auth && auth.siteID) {
+                    SiteContacts.find({ siteID: auth.siteID }, '-__v -siteID ').exec()
+                        .then(results => {
+                            (!!!results || results.length == 0) ? res.json(variables.errorMsg.notfound) : res.status(200).send(results[0]);
+                        });
+                } else {
+                    res.status(404).json(variables.errorMsg.notfound);
+                }
             }).catch(err => {
                 // Add new Log
                 logMSG({
@@ -63,7 +68,7 @@ siteDataRouter.get('/getAuthSiteContacts', func.checkAuthenticated, (req, res) =
                     message: func.onCatchCreateLogMSG(err),
                     sysOperation: 'get',
                     sysLevel: 'authsitecontacts'
-                }).save();
+                });
                 res.status(500).json({ error: err });
             });
     }

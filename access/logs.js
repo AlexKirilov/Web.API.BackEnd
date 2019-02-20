@@ -165,6 +165,30 @@ logsRouter.post("/systemLogs", func.getSiteID, async (req, res) => {
 });
 // TODO: REMOVE Logs which are older then 100 days
 
+logsRouter.delete("", func.getSiteID, async (req, res) => {
+  check("siteID")
+    .not()
+    .isEmpty();
+  check("userId")
+    .not()
+    .isEmpty();
+  sanitizeBody("notifyOnReply").toBoolean();
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  } else {
+    let data = req.body;
+    data.siteID = req.siteID;
+
+    SiteLogs.remove({ siteID: req.siteID }).then(() => {
+      res.status(200).json('All Logs are removed from DB!');
+    })
+    .catch(err => {
+        res.status(500).json({ error: err });
+    });
+  }
+});
+
 module.exports = logsRouter;
 
 // function logMSG(data) {

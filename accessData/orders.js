@@ -177,6 +177,7 @@ orderRouter.get(
           var results = [];
           orders.forEach(order => {
             Customers.findById(order.customerID).then(cucu => {
+              if (cucu)
               results.push({
                 customerID: cucu._id,
                 company: cucu.company,

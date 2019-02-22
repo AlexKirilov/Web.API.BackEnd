@@ -16,8 +16,9 @@
     "express": "^4.16.3",
     "express-validator": "^5.3.0",
     "jwt-simple": "^0.5.1",
-    "mongoose": "^5.1.1",
-    "nodemon": "^1.17.4"
+    "moment": "^2.24.0",
+    "mongoose": "^5.2.8",
+    "nodemon": "^1.18.10"
   },
   "engines": {
     "node": "8.11.1"

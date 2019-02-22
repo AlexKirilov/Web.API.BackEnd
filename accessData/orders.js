@@ -63,9 +63,12 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
   } else {
     const productData = req.body;
     const query = req.query;
+    console.log('query', query);
+    console.log('productData', productData);
+
     const perPage = parseInt(query.perPage || productData.perPage) || 25;
     const page = parseInt(query.page || productData.page) || 1;
-    const sort = convertSort(query.sort || productData.sortBy || {});
+    const sort = convertSort(query.sort || productData.sortBy || {date: 'desc'});
     const skip = page == 1 ? 0 : (page - 1) * perPage;
     by = { siteID: req.siteID };
 
@@ -76,7 +79,7 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
     if (!!productData.categoryID) by.categoryID = productData.categoryID;
     if (!!req.userId) {
       const customer = await Customers.findById(req.userId);
-      customerDiscount = customer.personalDiscount ? customer.personalDiscount : 0;
+      customerDiscount = (customer && customer.personalDiscount) ? customer.personalDiscount : 0;
     }
     Orders.find(by)
       .sort(sort)
@@ -155,7 +158,7 @@ orderRouter.get(
       const query = req.query;
       const perPage = parseInt(query.perPage || productData.perPage) || 25;
       const page = parseInt(query.page || productData.page) || 1;
-      const sort = convertSort(query.sort || productData.sortBy || {});
+      const sort = convertSort(query.sort || productData.sortBy || {date: 'desc'});
       const skip = page == 1 ? 0 : (page - 1) * perPage;
       by = { siteID: req.siteID, flag: 0 };
 
@@ -368,6 +371,8 @@ orderRouter.post("/editOrder", func.checkAuthenticated, async (req, res) => {
       req.authLevel == "MN" ||
       req.authLevel == "EE"
     ) {
+      console.log(req.body)
+
       Orders.findById(req.body.orderId).then(order => {
         order.flag = req.body.flag
         Orders.findByIdAndUpdate(req.body.orderId, order).then( (stat) => {

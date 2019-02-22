@@ -16,7 +16,7 @@ const invoicesSchema = new mongoose.Schema({
     countryPhoneCode: String,
     GDPR: { type: Boolean, default: false },
     flag: { type: Number, default: 0 },
-    dateOfCreation: { type: Date, default: new Date() },
+    dateOfCreation: { type: Date, default: Date() },
 });
 
 module.exports = mongoose.model('Invoices', invoicesSchema);

@@ -13,6 +13,7 @@ const orders = require('./accessData/orders');
 const siteData = require('./access/siteData');
 const comments = require('./access/comments');
 const customers = require('./access/customers');
+const dashboard = require('./accessData/dashboard');
 const gallery  = require('./accessData/gallery');
 const Invoices = require('./accessData/Invoice');
 const category = require('./accessData/category');
@@ -38,11 +39,12 @@ app.use('/invoices', Invoices);
 app.use('/comments', comments);
 app.use('/sitedata', siteData);
 app.use('/customers', customers);
+app.use('/dashboard', dashboard);
 app.use('/invoicecustomersdata', InvoiceCustomerDataFunc);
 app.use('/datatoolsWS', DataToolsTMP);
 app.use('/store', storeProducts);
 
-mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', (err) => {
+mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true }, (err) => {
     if (!err) console.log('connected to mongo');
 })
 

@@ -151,7 +151,6 @@ const func = {
     return msg || "";
   },
   convertSort: sortColumn => {
-    console.log("innnnnnn");
     if (typeof sortColumn !== "object") {
       let sort = {};
       sortColumn.split(",").forEach(element => {

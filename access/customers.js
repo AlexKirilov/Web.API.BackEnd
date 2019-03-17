@@ -120,6 +120,56 @@ customerRouter.get('/getCustomer', func.checkAuthenticated, async (req, res) => 
     }
 });
 
+//Required data for this call -> { "email": "mail@mail.com" }
+customerRouter.get('/getCustomerAddress', func.checkAuthenticated, async (req, res) => {
+    check('userId').not().isEmpty().isString();
+    check('siteID').not().isEmpty().isString();
+    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
+    sanitizeBody('notifyOnReply').toBoolean();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    } else {
+        let customer = await Customers.findById(
+            req.userId,
+            `-__v -GDPR -type -created -password -personalDiscount
+            -lastLogin -levelAuth -siteID -company -levelAuth`
+            ).catch(err => {
+            // Add new Log
+            logMSG({
+                siteID: req.siteID,
+                customerID: req.userId,
+                level: 'error',
+                message: func.onCatchCreateLogMSG(err),
+                sysOperation: 'get',
+                sysLevel: 'customer'
+            });
+            res.status(500).json({ error: err });
+        });
+        
+        if (!customer) {
+            customer = await Auth.findById(
+                req.userId,
+                `-__v -GDPR -type -created -password -personalDiscount
+                -lastLogin -levelAuth -siteID -company -levelAuth`
+                ).catch(err => {
+                // Add new Log
+                logMSG({
+                    siteID: req.siteID,
+                    customerID: req.userId,
+                    level: 'error',
+                    message: func.onCatchCreateLogMSG(err),
+                    sysOperation: 'get',
+                    sysLevel: 'customer'
+                });
+                res.status(500).json({ error: err });
+            });
+        }
+
+        res.status(200).send(customer);    
+    }
+});
+
 /////////////////////////////////////////////////
 ////////////// POST (NEW / UPDATE) //////////////
 /////////////////////////////////////////////////

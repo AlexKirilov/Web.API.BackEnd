@@ -5,7 +5,8 @@ const orderSchema = new mongoose.Schema({
   customerID: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
   order: { type: Array, default: [] },
   date: { type: Date, default: Date() },
-  flag: { type: Number, default: 0 } // -1 Canceled // 0 For approval // 1 delevering // 2 delivered
+  flag: { type: Number, default: 0 } 
+  // -1 Canceled // 0 For approval // 1 Approved // 2 Delivering // 3 Delivered
 });
 
 module.exports = mongoose.model("Orders", orderSchema);

@@ -14,6 +14,14 @@ var customerSchema = new mongoose.Schema({
     created: { type: Date, default: new Date ().toISOString() },
     lastLogin: { type: Date, default: new Date ().toISOString() },
     personalDiscount: { type: Number, default: 0 },
+    address: {
+        country: { type: String, default: '' },
+        town: { type: String, default: '' },
+        postcode: { type: String, default: '' },
+        address: { type: String, default: '' },
+        address1: { type: String, default: '' },
+        phone: { type: String, default: '' },
+    }
 });
 
 customerSchema.pre('save', function (next) {

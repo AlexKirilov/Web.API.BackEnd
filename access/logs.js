@@ -36,7 +36,7 @@ logsRouter.get("/getLogs", func.getSiteID, (req, res) => {
       .limit(perPage)
       .exec()
       .then(results => {
-        SiteLogs.count({}).then(count => {
+        SiteLogs.countDocuments({}).then(count => {
           let responce = {
             rows: count,
             pages: Math.ceil(count / perPage),
@@ -214,7 +214,6 @@ function convertSort(sortColumn) {
         sort[sortColumn] = "asc";
       }
       sortColumn = sort;
-      console.log(sortColumn);
     });
   }
   return sortColumn;

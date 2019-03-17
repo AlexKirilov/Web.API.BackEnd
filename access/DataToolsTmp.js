@@ -20,10 +20,8 @@ wsRouter.get("/WSAll", (req, res) => {
 
 wsRouter.post('/WS', (req, res) => {
     const newWS = req.body;
-    console.log(newWS);
     let ws = new wsSchema(newWS);
     ws.save().then( rest => {
-        console.log('New WS: ', rest);
         res.json(rest);
     })
 });

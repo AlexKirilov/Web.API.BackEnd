@@ -75,7 +75,7 @@ productRouter.post("/products", func.getSiteID, async (req, res) => {
       .exec()
       .then(results => {
         results.forEach(item => item.discount = customerDiscount);
-        Products.count(by).then(count => {
+        Products.countDocuments(by).then(count => {
           let responce = {
             rows: count,
             pages: Math.ceil(count / perPage),

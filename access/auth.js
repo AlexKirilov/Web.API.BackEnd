@@ -157,7 +157,6 @@ authRouter.post('/forgotpass',[
         return res.status(422).json({ errors: errors.array() });
     } else {
         const loginData = req.body;
-        console.log('loginData => ', loginData);
         Auth.findOne({ email: loginData.email, company: loginData.companyName  }) //, '-__v -firstname -lastname');
         .select('lastLogin siteID password levelAuth _id')
         .exec()
@@ -167,7 +166,6 @@ authRouter.post('/forgotpass',[
                 Site.findById(auth.siteID)
                     .exec()
                     .then(resultData => {
-                        console.log('Site => ', resultData);
                         if (!resultData) { res.status(404).json({ message: 'No valid entry found for provided Email' }); }
                         else {
                             func.createToken(res, auth, resultData);

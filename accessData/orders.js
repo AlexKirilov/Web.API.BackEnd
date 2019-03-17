@@ -29,7 +29,6 @@ function convertSort(sortColumn) {
         sort[sortColumn] = "asc";
       }
       sortColumn = sort;
-      console.log(sortColumn);
     });
   }
   return sortColumn;
@@ -63,13 +62,13 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
   } else {
     const productData = req.body;
     const query = req.query;
-    console.log('query', query);
-    console.log('productData', productData);
 
     const perPage = parseInt(query.perPage || productData.perPage) || 25;
     const page = parseInt(query.page || productData.page) || 1;
     const sort = convertSort(query.sort || productData.sortBy || {date: 'desc'});
     const skip = page == 1 ? 0 : (page - 1) * perPage;
+    let flags = query.flags || productData.flags || null;
+
     by = { siteID: req.siteID };
 
     if (!!productData.name)
@@ -81,6 +80,20 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
       const customer = await Customers.findById(req.userId);
       customerDiscount = (customer && customer.personalDiscount) ? customer.personalDiscount : 0;
     }
+    // Convert to standart flag
+    if (flags) {
+      flags = flags.split("");
+      let tmp = [];
+      flags.forEach( flag => {
+        if (flag == 'A') tmp.push('-1')
+        else if (flag == 'B') tmp.push('0')
+        else if (flag == 'C') tmp.push('1')
+        else if (flag == 'D') tmp.push('2')
+        else if (flag == 'E') tmp.push('3')
+      });
+      flags = tmp;
+    }
+
     Orders.find(by)
       .sort(sort)
       .skip(skip)
@@ -93,7 +106,12 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
           // var obj_ids = ids.map(function(id) { return ObjectId(id); });
           // const dddd = db.Customers.find({_id: {$in: obj_ids}});
           // console.log('Customers n Orders', dddd)
-          Orders.count(by).then(count => {
+          if (flags) {
+            orders = orders.filter( order => {
+              return flags.indexOf(order.flag.toString()) === -1
+            })
+          }
+          Orders.countDocuments(by).then(count => {
             let responce = {
               rows: count,
               pages: Math.ceil(count / perPage),
@@ -193,7 +211,7 @@ orderRouter.get(
               });
             });
           });
-          Orders.count(by).then(count => {
+          Orders.countDocuments(by).then(count => {
             let responce = {
               rows: count,
               pages: Math.ceil(count / perPage),
@@ -284,15 +302,12 @@ orderRouter.post("/addOrder", func.checkAuthenticated, async (req, res) => {
         $lt: new Date(new Date().setDate(new Date().getDate() + 1) - 1000)
       }
     });
-    console.log("aaa", aaa);
     new Orders(OrderUp).save();
     Orders.findOneAndUpdate(by, OrderUp)
       .exec()
       .then(newORder => {
         // Update Products Quantity
-        console.log(newORder);
         if (newORder == null) {
-          console.log("Order: ", order);
           // new Orders(order).save().then(result => {
           //   console.log('dddd')
           //   return res.status(200).send({ message: 'Order was added!' })
@@ -326,7 +341,6 @@ orderRouter.post("/addOrder", func.checkAuthenticated, async (req, res) => {
         }
       })
       .catch(err => {
-        console.log(err);
         logMSG({
           siteID: req.siteID,
           // customerID: req.userId,
@@ -371,12 +385,10 @@ orderRouter.post("/editOrder", func.checkAuthenticated, async (req, res) => {
       req.authLevel == "MN" ||
       req.authLevel == "EE"
     ) {
-      console.log(req.body)
 
       Orders.findById(req.body.orderId).then(order => {
         order.flag = req.body.flag
         Orders.findByIdAndUpdate(req.body.orderId, order).then( (stat) => {
-          console.log(stat)
           res.status(200).send({message: 'dsada'}) })
       });
     }

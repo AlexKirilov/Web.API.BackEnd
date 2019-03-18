@@ -13,6 +13,12 @@ var SiteContactsSchema = new mongoose.Schema({
         latitude: { type: Number, default: 0 },
         longitude: { type: Number, default: 0 },
         url: { type: String, default: '' }
+    },
+    address: {
+        town: { type: String, default: '' },
+        address: { type: String, default: '' },
+        country: { type: String, default: '' },
+        postcode: { type: String, default: '' },
     }
 });
 

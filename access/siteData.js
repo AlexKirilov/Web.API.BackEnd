@@ -16,7 +16,7 @@ function logMSG(data) {
 ///////////////////    GET    ///////////////////
 /////////////////////////////////////////////////
 //Get Site Data by SiteID
-siteDataRouter.post('/getsitecontacts', func.getSiteID, (req, res) => {
+siteDataRouter.get('/getsitecontacts', func.getSiteID, (req, res) => {
     check('siteID').not().isEmpty().isString();
     sanitizeBody('notifyOnReply').toBoolean();
 
@@ -24,8 +24,8 @@ siteDataRouter.post('/getsitecontacts', func.getSiteID, (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(422).json({ errors: errors.array() });
     } else {
-        SiteContacts.find({ siteID: req.siteID }, '-__v -siteID ').exec()
-            .find(results => {
+        SiteContacts.findOne({ siteID: req.siteID }, '-__v -siteID ').exec()
+            .then(results => {
                 if (!!!results || results.length == 0) { res.json(variables.errorMsg.notfound); }
                 else { res.status(200).send(results); }
             }).catch(err => {

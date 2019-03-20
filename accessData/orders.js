@@ -389,7 +389,7 @@ orderRouter.post("/editOrder", func.checkAuthenticated, async (req, res) => {
       Orders.findById(req.body.orderId).then(order => {
         order.flag = req.body.flag
         Orders.findByIdAndUpdate(req.body.orderId, order).then( (stat) => {
-          res.status(200).send({message: 'dsada'}) })
+          res.status(200).send({message: 'Order was updated successfully!'}) })
       });
     }
   }

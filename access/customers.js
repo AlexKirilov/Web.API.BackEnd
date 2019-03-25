@@ -116,7 +116,7 @@ customerRouter.get('/getCustomer', func.checkAuthenticated, async (req, res) => 
             });
             res.status(500).json({ error: err });
         });
-        res.status(200).send(customer);    
+        res.status(200).send(customer);
     }
 });
 
@@ -134,7 +134,7 @@ customerRouter.get('/getCustomerAddress', func.checkAuthenticated, async (req, r
             req.userId,
             `-__v -GDPR -type -created -password -personalDiscount
             -lastLogin -levelAuth -siteID -company -levelAuth`
-            ).catch(err => {
+        ).catch(err => {
             // Add new Log
             logMSG({
                 siteID: req.siteID,
@@ -146,13 +146,13 @@ customerRouter.get('/getCustomerAddress', func.checkAuthenticated, async (req, r
             });
             res.status(500).json({ error: err });
         });
-        
+
         if (!customer) {
             customer = await Auth.findById(
                 req.userId,
                 `-__v -GDPR -type -created -password -personalDiscount
                 -lastLogin -levelAuth -siteID -company -levelAuth`
-                ).catch(err => {
+            ).catch(err => {
                 // Add new Log
                 logMSG({
                     siteID: req.siteID,
@@ -166,7 +166,7 @@ customerRouter.get('/getCustomerAddress', func.checkAuthenticated, async (req, r
             });
         }
 
-        res.status(200).send(customer);    
+        res.status(200).send(customer);
     }
 });
 
@@ -229,6 +229,97 @@ customerRouter.post('/register', func.getSiteID, async (req, res) => {
     }
 });
 
+
+customerRouter.post('/forgotpass', [
+    check('email').isString().isEmail().normalizeEmail(),
+    check('companyName').not().isEmpty().isString(),
+    sanitizeBody('notifyOnReply').toBoolean()
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    } else {
+        const loginData = req.body;
+        Customers.findOne({ email: loginData.email, company: loginData.companyName }) //, '-__v -firstname -lastname');
+            .select('lastLogin siteID password levelAuth _id')
+            .exec()
+            .then(auth => {
+                if (!auth) { res.status(404).send(variables.errorMsg.notfound); }
+                else {
+                    Site.findById(auth.siteID)
+                        .exec()
+                        .then(resultData => {
+                            if (!resultData) { res.status(404).json({ message: 'No valid entry found for provided Email' }); }
+                            else {
+                                func.createToken(res, auth, resultData);
+                            }
+                        })
+                        .catch(err => {
+                            logMSG({
+                                level: 'error',
+                                message: func.onCatchCreateLogMSG(err),
+                                sysOperation: 'check',
+                                sysLevel: 'auth'
+                            });
+                            res.status(500).json({ error: err });
+                        });
+                }
+            }).catch(err => {
+                logMSG({
+                    level: 'error',
+                    message: func.onCatchCreateLogMSG(err),
+                    sysOperation: 'check',
+                    sysLevel: 'auth'
+                });
+                res.status(500).json({ error: err });
+            });
+    }
+});
+
+customerRouter.post('/resetpass', func.resetPassCheck, (req, res) => {
+    check('userId').not().isEmpty().isString();
+    check('newpass').not().isEmpty().isString();
+    check('siteID').not().isEmpty().isString();
+    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    } else {
+        const loginData = req.body;
+        Customers.findById(req.userId) //, '-__v -firstname -lastname');
+            .exec()
+            .then(auth => {
+                if (!auth) { res.status(404).send(variables.errorMsg.notfound); }
+                else {
+                    loginData.newpass = bcrypt.hashSync(loginData.newpass, null);
+                    auth.password = loginData.newpass;
+                    Customers.findByIdAndUpdate(req.userId, auth)
+                        .exec()
+                        .then((qqq) => {
+                            logMSG({
+                                siteID: req.siteID,
+                                customerID: req.userId,
+                                type: "customer",
+                                level: "information",
+                                message: 'Password was successfully changed for user with ID ' + req.userId,
+                                sysOperation: "update",
+                                sysLevel: "auth customers"
+                            });
+                            res.status(200).send(variables.successMsg.update); // Changed
+                        });
+                }
+            }).catch(err => {
+                logMSG({
+                    level: 'error',
+                    message: func.onCatchCreateLogMSG(err),
+                    sysOperation: 'check',
+                    sysLevel: 'auth'
+                });
+                res.status(500).json({ error: err });
+            });
+    }
+});
+
 // As minimum required data for this call -> { "password":"password", "email": "mail@mail.com" }
 customerRouter.post('/editcustomer', [
     check('email').isEmail().normalizeEmail(),
@@ -241,13 +332,13 @@ customerRouter.post('/editcustomer', [
         return res.status(422).json({ errors: errors.array() });
     } else {
         const editCu = req.body;
-        const checkCurrentCu = await Customers.find({email: editCu.email, siteID: req.siteID});
+        const checkCurrentCu = await Customers.find({ email: editCu.email, siteID: req.siteID });
         if (!checkCurrentCu || checkCurrentCu.length === 0) {
             return res.status(200).send({ message: 'Provided email address is invalid!' });
         }
         if (editCu.newEmail && editCu.newEmail !== void 0 && editCu.newEmail !== '') {
-            const checkForCu = await Customers.find({email: editCu.newEmail});
-            if(checkForCu && checkForCu.length > 0) {
+            const checkForCu = await Customers.find({ email: editCu.newEmail });
+            if (checkForCu && checkForCu.length > 0) {
                 return res.status(200).send({ message: 'Provided new email address is already taken!' });
             } else {
                 editCu.email = editCu.newEmail;
@@ -255,7 +346,7 @@ customerRouter.post('/editcustomer', [
         }
         Customers.findByIdAndUpdate(req.userId, editCu)
             .then((result) => {
-                    res.status(200); // .send(result);
+                res.status(200).send(variables.successMsg.update); // .send(result);
             }).catch(err => {
                 logMSG({
                     siteID: req.siteID,

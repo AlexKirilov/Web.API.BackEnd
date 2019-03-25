@@ -65,7 +65,7 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
 
     const perPage = parseInt(query.perPage || productData.perPage) || 25;
     const page = parseInt(query.page || productData.page) || 1;
-    const sort = convertSort(query.sort || productData.sortBy || {date: 'desc'});
+    const sort = convertSort(query.sort || productData.sortBy || { date: 'desc' });
     const skip = page == 1 ? 0 : (page - 1) * perPage;
     let flags = query.flags || productData.flags || null;
 
@@ -84,7 +84,7 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
     if (flags) {
       flags = flags.split("");
       let tmp = [];
-      flags.forEach( flag => {
+      flags.forEach(flag => {
         if (flag == 'A') tmp.push('-1')
         else if (flag == 'B') tmp.push('0')
         else if (flag == 'C') tmp.push('1')
@@ -92,6 +92,7 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
         else if (flag == 'E') tmp.push('3')
       });
       flags = tmp;
+      by.flag = { $in: flags }
     }
 
     Orders.find(by)
@@ -101,18 +102,9 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
       .exec()
       .then(orders => {
         if (orders) {
-          // var ids = [];
-          // orders.filter(order => ids.push(order.customerID));
-          // var obj_ids = ids.map(function(id) { return ObjectId(id); });
-          // const dddd = db.Customers.find({_id: {$in: obj_ids}});
-          // console.log('Customers n Orders', dddd)
-          if (flags) {
-            orders = orders.filter( order => {
-              return flags.indexOf(order.flag.toString()) === -1
-            })
-          }
           Orders.countDocuments(by).then(count => {
-            let responce = {
+
+            const responce = {
               rows: count,
               pages: Math.ceil(count / perPage),
               page: page,
@@ -122,7 +114,7 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
               lastRowOnPage:
                 page * perPage - 1 > count ? count : page * perPage - 1,
               sortBy: sort,
-              results: orders
+              results: orders,
             };
 
             res.status(200).send(responce);
@@ -176,7 +168,7 @@ orderRouter.get(
       const query = req.query;
       const perPage = parseInt(query.perPage || productData.perPage) || 25;
       const page = parseInt(query.page || productData.page) || 1;
-      const sort = convertSort(query.sort || productData.sortBy || {date: 'desc'});
+      const sort = convertSort(query.sort || productData.sortBy || { date: 'desc' });
       const skip = page == 1 ? 0 : (page - 1) * perPage;
       by = { siteID: req.siteID, flag: 0 };
 
@@ -199,16 +191,16 @@ orderRouter.get(
           orders.forEach(order => {
             Customers.findById(order.customerID).then(cucu => {
               if (cucu)
-              results.push({
-                customerID: cucu._id,
-                company: cucu.company,
-                name: cucu.firstname + " " + cucu.lastname,
-                date: order.date,
-                flag: order.flag,
-                order: order.order,
-                siteID: order.siteID,
-                id: order._id
-              });
+                results.push({
+                  customerID: cucu._id,
+                  company: cucu.company,
+                  name: cucu.firstname + " " + cucu.lastname,
+                  date: order.date,
+                  flag: order.flag,
+                  order: order.order,
+                  siteID: order.siteID,
+                  id: order._id
+                });
             });
           });
           Orders.countDocuments(by).then(count => {
@@ -247,7 +239,7 @@ function UpdateProductQnt(siteID, productID, qnt) {
     .exec()
     .then(res => {
       res.quantity = parseInt(res.quantity) - parseInt(qnt);
-      Products.findByIdAndUpdate(productID, res).then(r => {});
+      Products.findByIdAndUpdate(productID, res).then(r => { });
     })
     .catch(err => {
       logMSG({
@@ -388,8 +380,9 @@ orderRouter.post("/editOrder", func.checkAuthenticated, async (req, res) => {
 
       Orders.findById(req.body.orderId).then(order => {
         order.flag = req.body.flag
-        Orders.findByIdAndUpdate(req.body.orderId, order).then( (stat) => {
-          res.status(200).send({message: 'Order was updated successfully!'}) })
+        Orders.findByIdAndUpdate(req.body.orderId, order).then((stat) => {
+          res.status(200).send({ message: 'Order was updated successfully!' })
+        })
       });
     }
   }

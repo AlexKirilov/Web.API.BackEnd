@@ -121,6 +121,24 @@ authRouter.post('/login', [
     }
 });
 
+authRouter.get('/clientSiteID', func.checkAuthenticated, (req, res) => {
+    check('userId').not().isEmpty().isString();
+    check('siteID').not().isEmpty().isString();
+    check('authLevel').not().isEmpty().isString().isLength({ min: 2, max: 3 });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    } else {
+        Auth.findById(req.userId)
+            .exec()
+            .then(results => {
+                res.status(200).json({ sideID: results.siteID });
+            }).catch(err => {
+                res.status(500).json({ error: err });
+            });
+    }
+});
+
 authRouter.post('/checkForUser', [
     check('email').isString().isEmail(),
     check('password').isString().isLength({ min: 5 })
@@ -147,7 +165,7 @@ authRouter.post('/checkForUser', [
     }
 });
 
-authRouter.post('/forgotpass',[
+authRouter.post('/forgotpass', [
     check('email').isString().isEmail().normalizeEmail(),
     check('companyName').not().isEmpty().isString(),
     sanitizeBody('notifyOnReply').toBoolean()
@@ -157,39 +175,39 @@ authRouter.post('/forgotpass',[
         return res.status(422).json({ errors: errors.array() });
     } else {
         const loginData = req.body;
-        Auth.findOne({ email: loginData.email, company: loginData.companyName  }) //, '-__v -firstname -lastname');
-        .select('lastLogin siteID password levelAuth _id')
-        .exec()
-        .then(auth => {
-            if (!auth) { res.status(404).send(variables.errorMsg.notfound); }
-            else {
-                Site.findById(auth.siteID)
-                    .exec()
-                    .then(resultData => {
-                        if (!resultData) { res.status(404).json({ message: 'No valid entry found for provided Email' }); }
-                        else {
-                            func.createToken(res, auth, resultData);
-                        }
-                    })
-                    .catch(err => {
-                        logMSG({
-                            level: 'error',
-                            message: func.onCatchCreateLogMSG(err),
-                            sysOperation: 'check',
-                            sysLevel: 'auth'
+        Auth.findOne({ email: loginData.email, company: loginData.companyName }) //, '-__v -firstname -lastname');
+            .select('lastLogin siteID password levelAuth _id')
+            .exec()
+            .then(auth => {
+                if (!auth) { res.status(404).send(variables.errorMsg.notfound); }
+                else {
+                    Site.findById(auth.siteID)
+                        .exec()
+                        .then(resultData => {
+                            if (!resultData) { res.status(404).json({ message: 'No valid entry found for provided Email' }); }
+                            else {
+                                func.createToken(res, auth, resultData);
+                            }
+                        })
+                        .catch(err => {
+                            logMSG({
+                                level: 'error',
+                                message: func.onCatchCreateLogMSG(err),
+                                sysOperation: 'check',
+                                sysLevel: 'auth'
+                            });
+                            res.status(500).json({ error: err });
                         });
-                        res.status(500).json({ error: err });
-                    });
-            }
-        }).catch(err => {
-            logMSG({
-                level: 'error',
-                message: func.onCatchCreateLogMSG(err),
-                sysOperation: 'check',
-                sysLevel: 'auth'
+                }
+            }).catch(err => {
+                logMSG({
+                    level: 'error',
+                    message: func.onCatchCreateLogMSG(err),
+                    sysOperation: 'check',
+                    sysLevel: 'auth'
+                });
+                res.status(500).json({ error: err });
             });
-            res.status(500).json({ error: err });
-        });
     }
 });
 
@@ -204,36 +222,36 @@ authRouter.post('/resetpass', func.resetPassCheck, (req, res) => {
     } else {
         const loginData = req.body;
         Auth.findById(req.userId) //, '-__v -firstname -lastname');
-        .exec()
-        .then(auth => {
-            if (!auth) { res.status(404).send(variables.errorMsg.notfound); }
-            else {
-                loginData.newpass = bcrypt.hashSync(loginData.newpass, null);
-                auth.password = loginData.newpass;
-                Auth.findByIdAndUpdate(req.userId, auth)
-                .exec()
-                  .then((qqq) => {
-                    logMSG({
-                      siteID: req.siteID,
-                      customerID: req.userId,
-                      type: "customer",
-                      level: "information",
-                      message: 'Password was successfully changed for user with ID ' + req.userId,
-                      sysOperation: "update",
-                      sysLevel: "auth customers"
-                    });
-                    res.status(200).send(variables.successMsg.update); // Changed
-                  });
-            }
-        }).catch(err => {
-            logMSG({
-                level: 'error',
-                message: func.onCatchCreateLogMSG(err),
-                sysOperation: 'check',
-                sysLevel: 'auth'
+            .exec()
+            .then(auth => {
+                if (!auth) { res.status(404).send(variables.errorMsg.notfound); }
+                else {
+                    loginData.newpass = bcrypt.hashSync(loginData.newpass, null);
+                    auth.password = loginData.newpass;
+                    Auth.findByIdAndUpdate(req.userId, auth)
+                        .exec()
+                        .then((qqq) => {
+                            logMSG({
+                                siteID: req.siteID,
+                                customerID: req.userId,
+                                type: "customer",
+                                level: "information",
+                                message: 'Password was successfully changed for user with ID ' + req.userId,
+                                sysOperation: "update",
+                                sysLevel: "auth customers"
+                            });
+                            res.status(200).send(variables.successMsg.update); // Changed
+                        });
+                }
+            }).catch(err => {
+                logMSG({
+                    level: 'error',
+                    message: func.onCatchCreateLogMSG(err),
+                    sysOperation: 'check',
+                    sysLevel: 'auth'
+                });
+                res.status(500).json({ error: err });
             });
-            res.status(500).json({ error: err });
-        });
     }
 });
 

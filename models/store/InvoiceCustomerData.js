@@ -13,7 +13,6 @@ const cuInvoiceDetailsSchema = new mongoose.Schema({
     postcode: { type: String, default: '' },
     phone: { type: Number, default: 0 },
     countryPhoneCode: { type: String, default: '' },
-    GDPR: { type: Boolean, default: false }, // We may not need this here
 });
 
 module.exports = mongoose.model('CustomerInvoiceData', cuInvoiceDetailsSchema);

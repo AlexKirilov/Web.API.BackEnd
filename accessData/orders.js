@@ -94,6 +94,8 @@ orderRouter.get("/getorders", func.checkAuthenticated, async (req, res) => {
       flags = tmp;
       by.flag = { $in: flags }
     }
+    if (req.levelOfAuth == 'CU')
+      by.customerID = req.userId;
 
     Orders.find(by)
       .sort(sort)

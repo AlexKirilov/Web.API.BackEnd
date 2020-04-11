@@ -14,12 +14,15 @@ const siteData = require('./access/siteData');
 const comments = require('./access/comments');
 const customers = require('./access/customers');
 const dashboard = require('./accessData/dashboard');
-const gallery  = require('./accessData/gallery');
+const gallery = require('./accessData/gallery');
 const Invoices = require('./accessData/Invoice');
 const category = require('./accessData/category');
 const storeProducts = require('./accessData/product');
 const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
 const DataToolsTMP = require('./access/DataToolsTmp');
+
+const stellarAge = require('./stellarAge/stellarAge');
+
 const app = express();
 
 mongoose.Promise = Promise;
@@ -44,10 +47,12 @@ app.use('/invoicecustomersdata', InvoiceCustomerDataFunc);
 app.use('/datatoolsWS', DataToolsTMP);
 app.use('/store', storeProducts);
 
+app.use('/stellar-age', stellarAge);
+
 mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true }, (err) => {
     if (!err) console.log('connected to mongo');
 })
 
-app.listen( process.env.PORT || 3000);
+app.listen(process.env.PORT || 3000);
 
 //On each new customer create new tables // TEST

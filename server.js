@@ -23,15 +23,15 @@ const DataToolsTMP = require('./access/DataToolsTmp');
 const options = {
     rememberUpgrade: true,
     transports: ['polling'],
-    secure: true,
+    secure: false,
     rejectUnauthorized: false,
     origins: '*:*'
 };
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const http = require('https').Server(app);
+const io = require('socket.io')(http, options);
 // client.listen(4567).sockets;
 
 // const { Server } = require('ws');

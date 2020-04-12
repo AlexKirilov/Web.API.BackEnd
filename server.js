@@ -20,9 +20,19 @@ const storeProducts = require('./accessData/product');
 const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
 const DataToolsTMP = require('./access/DataToolsTmp');
 
+const options = {
+    allowUpgrades: true,
+    transports: ['polling', 'websocket'],
+    pingTimeout: 9000,
+    pingInterval: 3000,
+    cookie: 'mycookie',
+    httpCompression: true,
+    origins: '*:*'
+};
+
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const client = require('socket.io')({ transports: 'websocket', 'origins': '*:*', upgrade: false });
+const client = require('socket.io')(options);
 client.listen(4567).sockets;
 
 mongoose.Promise = Promise;

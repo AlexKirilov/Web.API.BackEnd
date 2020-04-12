@@ -30,7 +30,8 @@ const options = {
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const client = require('socket.io')(options);
+const server = require('https').Server(app);
+const client = require('socket.io')(server);
 client.listen(4567).sockets;
 
 mongoose.Promise = Promise;

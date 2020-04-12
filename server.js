@@ -19,11 +19,14 @@ const category = require('./accessData/category');
 const storeProducts = require('./accessData/product');
 const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
 const DataToolsTMP = require('./access/DataToolsTmp');
+const http = require("http");
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
 
 mongoose.Promise = Promise;
+
+app.use(express.static(__dirname + "/"))
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -49,47 +52,55 @@ app.use('/stellar-age', stellarAge);
 
 mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
     if (!err) console.log('connected to mongo');
+});
 
-
-    wss.on('connection', (socket) => {
-        let chat = db.collection('chat');
-
-        // create func to send status
-        sendStatus = (s) => {
-            socket.emit('status', s);
-        }
-
-        chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
-            if (err) { throw err; }
-            socket.emit('output', res);
-        });
-
-        socket.on('input', (data) => {
-            chat.insertOne(data, () => {
-                wss.emit('output', data);
-
-                sendStatus({
-                    message: 'Message send',
-                    clear: true
-                })
-            });
-        });
-
-        socket.on('clear', (data) => {
-            chat.deleteMany({}, () => {
-                socket.emit('cleared');
-            })
-        });
-        ws.on('close', () => console.log('Client disconnected'));
-    });
-})
 const INDEX = '/index.html';
 app.use((req, res) => res.sendFile(INDEX, { root: __dirname }))
-app.listen(process.env.PORT || 3000, () => console.log(`Listening on ${process.env.PORT || 3000}`));
+app.listen(process.env.PORT || 5000, () => console.log(`Listening on ${process.env.PORT || 5000}`));
 
 const WebsocketServer = require("ws").Server;
 const wss = new WebsocketServer({
-    port: process.env.PORT || 3001
+    port: process.env.PORT || 5001
 });
 
+wss.on("connection", function(socket) {
+    var id = setInterval(function() {
+        socket.send(JSON.stringify(new Date()), function() {})
+    }, 1000);
+
+    console.log("websocket connection open")
+
+    let chat = db.collection('chat');
+    // create func to send status
+    sendStatus = (s) => {
+        socket.emit('status', s);
+    }
+
+    chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
+        if (err) { throw err; }
+        socket.emit('output', res);
+    });
+
+    socket.on('input', (data) => {
+        chat.insertOne(data, () => {
+            wss.emit('output', data);
+
+            sendStatus({
+                message: 'Message send',
+                clear: true
+            })
+        });
+    });
+
+    socket.on('clear', (data) => {
+        chat.deleteMany({}, () => {
+            socket.emit('cleared');
+        })
+    });
+
+    socket.on("close", function() {
+        console.log("websocket connection close")
+        clearInterval(id)
+    })
+});
 //On each new customer create new tables // TEST

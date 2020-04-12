@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const jwt = require('jwt-simple');
 
 const auth = require('./access/auth');
 const authCU = require('./access/authCU');
@@ -22,8 +21,8 @@ const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
 const DataToolsTMP = require('./access/DataToolsTmp');
 
 const stellarAge = require('./stellarAge/stellarAge');
-
 const app = express();
+const client = require('socket.io').listen(4000).sockets;
 
 mongoose.Promise = Promise;
 
@@ -49,8 +48,42 @@ app.use('/store', storeProducts);
 
 app.use('/stellar-age', stellarAge);
 
-mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true }, (err) => {
+mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
     if (!err) console.log('connected to mongo');
+
+    client.on('connection', (socket) => {
+        let chat = db.collection('chat');
+
+        // create func to send status
+        sendStatus = (s) => {
+            socket.emit('status', s);
+        }
+
+        chat.find().limit(200).sort({ _id: 1 }).toArray((err, res) => {
+            if (err) { throw err; }
+            socket.emit('output', res);
+        });
+
+        socket.on('input', (data) => {
+            chat.insert({ data }, () => {
+                client.emit('output', [data]);
+
+                sendStatus({
+                    message: 'Message send',
+                    clear: true
+                })
+            });
+        });
+
+        socket.on('clear', (data) => {
+            char.remove({}, () => {
+                socket.emit('cleared');
+            })
+        })
+    });
+
+
+
 })
 
 app.listen(process.env.PORT || 3000);

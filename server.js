@@ -22,7 +22,7 @@ const DataToolsTMP = require('./access/DataToolsTmp');
 
 const options = {
     rememberUpgrade: true,
-    transports: ['websocket'],
+    transports: ['polling'],
     secure: true,
     rejectUnauthorized: false,
     origins: '*:*'
@@ -30,13 +30,12 @@ const options = {
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const server = require('https').Server(app);
-// const client = require('socket.io')(server);
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 // client.listen(4567).sockets;
 
-const { Server } = require('ws');
-const wss = new Server({ server });
-var dvD;
+// const { Server } = require('ws');
+// const wss = new Server({ server });
 
 mongoose.Promise = Promise;
 
@@ -64,70 +63,39 @@ app.use('/stellar-age', stellarAge);
 
 mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
     if (!err) console.log('connected to mongo');
-    dvD = db;
-    // client.on('connection', (socket) => {
-    //     let chat = db.collection('chat');
 
-    //     // create func to send status
-    //     sendStatus = (s) => {
-    //         socket.emit('status', s);
-    //     }
+    io.on('connection', (socket) => {
+        let chat = db.collection('chat');
 
-    //     chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
-    //         if (err) { throw err; }
-    //         socket.emit('output', res);
-    //     });
+        // create func to send status
+        sendStatus = (s) => {
+            socket.emit('status', s);
+        }
 
-    //     socket.on('input', (data) => {
-    //         chat.insertOne(data, () => {
-    //             client.emit('output', data);
-
-    //             sendStatus({
-    //                 message: 'Message send',
-    //                 clear: true
-    //             })
-    //         });
-    //     });
-
-    //     socket.on('clear', (data) => {
-    //         chat.deleteMany({}, () => {
-    //             socket.emit('cleared');
-    //         })
-    //     })
-    // });
-});
-
-app.listen(process.env.PORT || 3000);
-
-wss.on('connection', (socket) => {
-    let chat = dvD.collection('chat');
-
-    // create func to send status
-    sendStatus = (s) => {
-        socket.emit('status', s);
-    }
-
-    chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
-        if (err) { throw err; }
-        socket.emit('output', res);
-    });
-
-    socket.on('input', (data) => {
-        chat.insertOne(data, () => {
-            client.emit('output', data);
-
-            sendStatus({
-                message: 'Message send',
-                clear: true
-            })
+        chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
+            if (err) { throw err; }
+            socket.emit('output', res);
         });
-    });
 
-    socket.on('clear', (data) => {
-        chat.deleteMany({}, () => {
-            socket.emit('cleared');
+        socket.on('input', (data) => {
+            chat.insertOne(data, () => {
+                io.emit('output', data);
+
+                sendStatus({
+                    message: 'Message send',
+                    clear: true
+                })
+            });
+        });
+
+        socket.on('clear', (data) => {
+            chat.deleteMany({}, () => {
+                socket.emit('cleared');
+            })
         })
-    })
+    });
 });
+
+http.listen(4567);
 
 //On each new customer create new tables // TEST

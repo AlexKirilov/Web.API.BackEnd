@@ -22,7 +22,7 @@ const DataToolsTMP = require('./access/DataToolsTmp');
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const client = require('socket.io').listen(process.env.PORT || 4000).sockets;
+const client = require('socket.io').listen(4000).sockets;
 
 mongoose.Promise = Promise;
 

@@ -32,7 +32,7 @@ const options = {
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const client = require('socket.io')(options);
+const client = require('socket.io');
 client.listen(4567).sockets;
 
 mongoose.Promise = Promise;

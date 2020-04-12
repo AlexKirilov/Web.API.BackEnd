@@ -21,18 +21,16 @@ const InvoiceCustomerDataFunc = require('./accessData/InvoiceCustomerDataFunc');
 const DataToolsTMP = require('./access/DataToolsTmp');
 
 const options = {
-    allowUpgrades: true,
-    transports: ['polling', 'websocket'],
-    pingTimeout: 9000,
-    pingInterval: 3000,
-    cookie: 'mycookie',
-    httpCompression: true,
+    rememberUpgrade: true,
+    transports: ['websocket'],
+    secure: true,
+    rejectUnauthorized: false,
     origins: '*:*'
 };
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const client = require('socket.io');
+const client = require('socket.io')(options);
 client.listen(4567).sockets;
 
 mongoose.Promise = Promise;

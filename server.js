@@ -59,14 +59,14 @@ mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com
             socket.emit('status', s);
         }
 
-        chat.find().limit(200).sort({ _id: 1 }).toArray((err, res) => {
+        chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
             if (err) { throw err; }
             socket.emit('output', res);
         });
 
         socket.on('input', (data) => {
-            chat.insert({ data }, () => {
-                client.emit('output', [data]);
+            chat.insertOne(data, () => {
+                client.emit('output', data);
 
                 sendStatus({
                     message: 'Message send',
@@ -76,7 +76,7 @@ mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com
         });
 
         socket.on('clear', (data) => {
-            char.remove({}, () => {
+            chat.deleteMany({}, () => {
                 socket.emit('cleared');
             })
         })

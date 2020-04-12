@@ -22,7 +22,16 @@ const DataToolsTMP = require('./access/DataToolsTmp');
 
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
-const client = require('socket.io').listen(4000).sockets;
+
+const PORT = process.env.PORT || 3000;
+const INDEX = '/index.html';
+
+const server = express()
+    .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+    .listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+const { Server } = require('ws');
+const wss = new Server({ server });
 
 mongoose.Promise = Promise;
 
@@ -51,7 +60,8 @@ app.use('/stellar-age', stellarAge);
 mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi', { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
     if (!err) console.log('connected to mongo');
 
-    client.on('connection', (socket) => {
+
+    wss.on('connection', (socket) => {
         let chat = db.collection('chat');
 
         // create func to send status
@@ -66,7 +76,7 @@ mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com
 
         socket.on('input', (data) => {
             chat.insertOne(data, () => {
-                client.emit('output', data);
+                wss.emit('output', data);
 
                 sendStatus({
                     message: 'Message send',
@@ -79,11 +89,9 @@ mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com
             chat.deleteMany({}, () => {
                 socket.emit('cleared');
             })
-        })
+        });
+        ws.on('close', () => console.log('Client disconnected'));
     });
-
-
-
 })
 
 app.listen(process.env.PORT || 3000);

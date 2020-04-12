@@ -23,16 +23,6 @@ const DataToolsTMP = require('./access/DataToolsTmp');
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-const INDEX = '/index.html';
-
-const server = express()
-    .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
-    .listen(PORT, () => console.log(`Listening on ${PORT}`));
-
-const { Server } = require('ws');
-const wss = new Server({ server });
-
 mongoose.Promise = Promise;
 
 app.use(cors());
@@ -93,7 +83,13 @@ mongoose.connect('mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com
         ws.on('close', () => console.log('Client disconnected'));
     });
 })
+const INDEX = '/index.html';
+app.use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+app.listen(process.env.PORT || 3000, () => console.log(`Listening on ${process.env.PORT || 3000}`));
 
-app.listen(process.env.PORT || 3000);
+const WebsocketServer = require("ws").Server;
+const wss = new WebsocketServer({
+    port: process.env.PORT || 3001
+});
 
 //On each new customer create new tables // TEST

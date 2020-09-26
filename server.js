@@ -61,7 +61,7 @@ app.use('/store', storeProducts);
 
 app.use('/stellar-age', stellarAge);
 
-mongoose.connect('mongodb+srv://studentapitest:studentapitestadmin@studentapi.xqvch.mongodb.net/studentapi?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
     if (!err) console.log('connected to mongo');
 
     io.on('connection', (socket) => {

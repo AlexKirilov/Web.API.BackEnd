@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const connectDB = require('./connectionDB');
 
 const app = express();
-const http = require('https').Server(app);
+// const http = require('https').Server(app);
 
 connectDB();
 
@@ -32,7 +32,7 @@ app.use('/store', require('./accessData/product'));
 
 const port = process.env.PORT || 4567;
 const host = process.env.HOST || '0.0.0.0'
-const serverT = http.listen(port, host, () => console.log('Server started: ', port, host));
+const serverT = app.listen(port, host, () => console.log('Server started: ', port, host));
 
 serverT.on('clientError', (err, socket) => {
   console.error(err);

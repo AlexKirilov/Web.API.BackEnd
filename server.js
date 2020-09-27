@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const mongo = require('mongodb');
+const url = "mongodb://localhost:27017";
 
 const auth = require('./access/auth');
 const authCU = require('./access/authCU');
@@ -63,7 +65,10 @@ app.use('/store', storeProducts);
 
 const devEnv = 'mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi';
 // mongodb+srv://studentapitest:studentapitestadmin@studentapi.xqvch.mongodb.net/studentapi?retryWrites=true&w=majority
-mongoose.connect(process.env.MONGODB_URI || devEnv, { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
+mongo.connect(
+    process.env.MONGODB_URI || devEnv, 
+    { useNewUrlParser: true, useUnifiedTopology: true }, 
+    (err, db) => {
     if (!err) {
         console.log('connected to mongo ');
         console.log('mongo_uri ', http.MONGODB_URI);
@@ -98,6 +103,7 @@ mongoose.connect(process.env.MONGODB_URI || devEnv, { useNewUrlParser: true, use
     //         })
     //     })
     // });
+    db.close();
 });
 
 http.listen(4567);

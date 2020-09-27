@@ -32,4 +32,9 @@ app.use('/store', require('./accessData/product'));
 
 const port = process.env.PORT || 4567;
 const host = process.env.HOST || '0.0.0.0'
-http.listen(port, host, () => console.log('Server started: ', port, host));
+const serverT = http.listen(port, host, () => console.log('Server started: ', port, host));
+
+serverT.on('clientError', (err, socket) => {
+  console.error(err);
+  socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+});

@@ -31,7 +31,7 @@ const options = {
 const stellarAge = require('./stellarAge/stellarAge');
 const app = express();
 const http = require('https').Server(app);
-const io = require('socket.io')(http, options);
+// const io = require('socket.io')(http, options);
 // client.listen(4567).sockets;
 
 // const { Server } = require('ws');
@@ -59,43 +59,45 @@ app.use('/invoicecustomersdata', InvoiceCustomerDataFunc);
 app.use('/datatoolsWS', DataToolsTMP);
 app.use('/store', storeProducts);
 
-app.use('/stellar-age', stellarAge);
+// app.use('/stellar-age', stellarAge);
 
 const devEnv = 'mongodb://studentapitest:studentapitestadmin@ds119080.mlab.com:19080/studentapi';
 // mongodb+srv://studentapitest:studentapitestadmin@studentapi.xqvch.mongodb.net/studentapi?retryWrites=true&w=majority
 mongoose.connect(process.env.MONGODB_URI || devEnv, { useNewUrlParser: true, useUnifiedTopology: true }, (err, db) => {
-    if (!err) console.log('connected to mongo');
+    if (!err) {
+        console.log('connected to mongo ');
+        console.log('mongo_uri ', http.MONGODB_URI);
+    }
+    // io.on('connection', (socket) => {
+    //     let chat = db.collection('chat');
 
-    io.on('connection', (socket) => {
-        let chat = db.collection('chat');
+    //     // create func to send status
+    //     sendStatus = (s) => {
+    //         socket.emit('status', s);
+    //     }
 
-        // create func to send status
-        sendStatus = (s) => {
-            socket.emit('status', s);
-        }
+    //     chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
+    //         if (err) { throw err; }
+    //         socket.emit('output', res);
+    //     });
 
-        chat.find().limit(50).sort({ _id: 1 }).toArray((err, res) => {
-            if (err) { throw err; }
-            socket.emit('output', res);
-        });
+    //     socket.on('input', (data) => {
+    //         chat.insertOne(data, () => {
+    //             io.emit('output', data);
 
-        socket.on('input', (data) => {
-            chat.insertOne(data, () => {
-                io.emit('output', data);
+    //             sendStatus({
+    //                 message: 'Message send',
+    //                 clear: true
+    //             })
+    //         });
+    //     });
 
-                sendStatus({
-                    message: 'Message send',
-                    clear: true
-                })
-            });
-        });
-
-        socket.on('clear', (data) => {
-            chat.deleteMany({}, () => {
-                socket.emit('cleared');
-            })
-        })
-    });
+    //     socket.on('clear', (data) => {
+    //         chat.deleteMany({}, () => {
+    //             socket.emit('cleared');
+    //         })
+    //     })
+    // });
 });
 
 http.listen(4567);

@@ -25,8 +25,6 @@
     "mongoose": "^5.9.7",
     "nodemon": "^1.19.4",
     "npm": "^6.14.8",
-    "socket.io": "^2.3.0",
-    "socket.io-redis": "^5.4.0",
     "utf-8-validate": "^5.0.2",
     "ws": "^7.3.1"
   },

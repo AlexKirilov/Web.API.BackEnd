@@ -74,7 +74,7 @@ logsRouter.post("/getSiteLogs", func.getSiteID, (req, res) => {
     let by = {};
     by.siteID = req.siteID;
     if (!!data.type) {
-      by.logType = data.type;
+      by.sysLevel = data.type;
     }
     if (!!data.level) {
       by.level = data.level;

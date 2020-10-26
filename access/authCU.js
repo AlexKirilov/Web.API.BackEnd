@@ -159,6 +159,7 @@ authCURouter.post("/cudiscount", func.checkAuthenticated, (req, res) => {
             .exec()
             .then(result => {
               if (result) {
+                result.levelAuth = userData.levelAuth;
                 result.personalDiscount = userData.personalDiscount;
                 Customers.findByIdAndUpdate(result._id, result)
                   .exec()

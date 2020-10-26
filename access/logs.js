@@ -103,8 +103,9 @@ logsRouter.get("/logDataFilter", (req, res) => {
   const data = {
     type: [
       { value: "", label: "All" },
-      { value: "product", label: "Product" },
-      { value: "invoice", label: "Invoice" },
+      { value: "orders", label: "Orders" },
+      { value: "products", label: "Product" },
+      { value: "invoices", label: "Invoice" },
       { value: "category", label: "Category" }
     ],
     level: [

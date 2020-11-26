@@ -45,6 +45,7 @@ const func = {
       let token = req.header("Authorization").split(" ")[1]; // [0] removing the 'token' string
       let siteData = req.header("SiteData").split(" "); // [0] LevelOfAuth + [1] Public Key
       let siteID = req.header("WebSite").split(" ")[1]; // [0] removing the 'ID' string
+      console.log(siteID, siteData, token);
       let levelOfAuth = siteData[0]; //SA, AD, MN, CU
       let publicKey = siteData[1];
 
